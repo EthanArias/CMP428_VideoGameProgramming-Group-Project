@@ -6,7 +6,7 @@ public class Game implements Runnable{
 	private GamePanel gamePanel;
 	
 	public static final int FPS = 60;
-	public static final long FRAME_MS = 1000 / FPS;
+	public static final int UPS = 1000; // lets us measure time in ~ milliseconds
 	
 	private boolean isRunning = true;
 	Thread gameThread;
@@ -25,28 +25,45 @@ public class Game implements Runnable{
 	
 	@Override
 	public void run() {
-		double timePerFrame = 1000000000/FPS;
-		long lastFrame = System.nanoTime();
-		long now = System.nanoTime();
-		long elapsedMs = 0;
+		double timePerFrame = 1000000000.0/FPS;
+		double timePerUpdate = 1000000000.0/UPS;
+		
+		long currentTime = System.nanoTime();
+		long previousTime = System.nanoTime();
+		
 		long frames = 0;
-		long lastCheck = 0;
+		int updates = 0;
+		long lastCheck = System.currentTimeMillis();
+		
+		double deltaU = 0;
+		double deltaF = 0;
 		
 		while(gameThread != null) {
-			now = System.nanoTime();
-			elapsedMs = now - lastFrame;
+			currentTime = System.nanoTime();
 			
-			if(elapsedMs>=timePerFrame && isRunning) {
-				gamePanel.update(elapsedMs);
-				gamePanel.repaint();
-				lastFrame = now;
-				frames++;
+			deltaU += (currentTime - previousTime) / timePerUpdate;
+			deltaF += (currentTime - previousTime) / timePerFrame;
+			previousTime = currentTime;
+			
+			if(isRunning) {
+				if(deltaU >= 1) {
+					gamePanel.update(deltaU);
+					updates++;
+					deltaU--;
+				}
+				
+				if(deltaF >= 1) {
+					gamePanel.repaint();
+					frames++;
+					deltaF--;
+				}
 			}
 			
 			if(System.currentTimeMillis() - lastCheck >= 1000) {
 				lastCheck = System.currentTimeMillis();
-				System.out.println("FPS: " + frames);
+				System.out.println("FPS: " + frames + " | UPS: " + updates);
 				frames = 0;
+				updates = 0;
 			}
 		}
 	}

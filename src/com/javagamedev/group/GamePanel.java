@@ -14,8 +14,6 @@ public class GamePanel extends JPanel {
 	private static final long serialVersionUID = 1L;
 	private boolean debug = false;
 	public static final Dimension SIZE = new Dimension (400,400);
-	public static final int FPS = 60;
-	public static final long FRAME_MS = 1000 / FPS;
 	public static final int TILE_SIZE = 0;
 	
 	// INPUT
@@ -39,8 +37,8 @@ public class GamePanel extends JPanel {
 		this.setMaximumSize(SIZE);
 	}
 	
-	public void update(long elapsedMs) {
-		// elapsedMs is milliseconds elapsed for this update (typically FRAME_MS)
+	public void update(double elapsedUnits) {
+		// elapsedUnits is the number of update 'ticks' elapsed (fractional values allowed)
 		if(debugAction.isPressed()) {
 			debug = !debug;
 		}
