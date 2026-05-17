@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="Group_Project" default="build" basedir=".">
+
+    <!-- Project Directories -->
+    <property name="src.dir"  value="src"/>
+    <property name="res.dir"  value="res"/>
+    <property name="lib.dir"  value="lib"/>
+    <property name="build.dir" value="build"/>
+    <property name="jar.dir" value="${build.dir}/jar"/>
+    <property name="doc.dir" value="doc"/>
+
+    <!-- Compiler Settings -->
+    <property name="build.compiler" value="modern"/>
+    <property name="build.compiler.emacs" value="on"/>
+
+    <path id="lib.path">
+        <fileset dir="${lib.dir}">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
+
+    <!-- Clean -->
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+    </target>
+
+    <!-- Compile -->
+	<target name="compile">
+	    <mkdir dir="${build.dir}"/>
+	    <javac srcdir="${src.dir}"
+	           destdir="${build.dir}"
+	           includeantruntime="false"
+	           release="21">
+	        <classpath>
+	            <pathelement location="${build.dir}"/>
+	            <path refid="lib.path"/>
+	        </classpath>
+	    </javac>
+	</target>
+
+
+    <!-- Build Output Folder -->
+    <target name="build" depends="clean, compile">
+
+        <!-- Create build directory -->
+        <mkdir dir="${build.dir}"/>
+
+        <!-- Copy resources -->
+        <copy todir="${build.dir}">
+            <fileset dir=".">
+                <include name="${res.dir}/**"/>
+            </fileset>
+        </copy>
+
+        <!-- Copy libraries -->
+    	<copy todir="${build.dir}">
+		    <fileset dir=".">
+			    <include name="${lib.dir}/**"/>
+		    </fileset>
+    	</copy>
+
+    </target>
+	
+	<target name="app" depends="build">
+		<!-- Create jar directory if needed and produce an executable fat jar containing build output and dependencies -->
+		<mkdir dir="${jar.dir}"/>
+		<jar destfile="${jar.dir}/GroupProject.jar">
+			<manifest>
+				<attribute name="Main-Class" value="com.javagamedev.group.Main"/>
+			</manifest>
+			<!-- include compiled classes -->
+			<fileset dir="${build.dir}"/>
+			<!-- unpack dependency jars into the resulting jar to create a fat jar -->
+			<zipgroupfileset dir="${lib.dir}" includes="*.jar"/>
+		</jar>
+	</target>
+
+    <!-- Create JAR -->
+    <target name="jar" depends="build">
+        <mkdir dir="${jar.dir}"/>
+
+        <jar destfile="${jar.dir}/${ant.project.name}.jar" basedir="${build.dir}">
+            <manifest>
+                <attribute name="Main-Class" value=""/>
+            </manifest>
+        </jar>
+    </target>
+
+    <!-- Javadoc               -->
+    <target name="javadoc">
+        <delete dir="${doc.dir}" failonerror="false"/>
+        <mkdir dir="${doc.dir}"/>
+
+        <javadoc sourcepath="${src.dir}"
+                 destdir="${doc.dir}"
+                 access="private"
+                 author="true"
+                 version="true"
+                 use="true">
+            <fileset dir="${src.dir}">
+                <include name="**/*.java"/>
+            </fileset>
+            <link href="https://docs.oracle.com"/>
+        </javadoc>
+    </target>
+
+</project>
