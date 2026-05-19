@@ -3,10 +3,12 @@ package com.javagamedev.group.tiles;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.util.Arrays;
 
 import com.javagamedev.group.tiles.Tile;
 import com.javagamedev.group.tiles.Tile.AnimationTile;
 import com.javagamedev.group.tiles.Tile.BlankTile;
+import com.javagamedev.group.tiles.Tile.ImageTile;
 
 public class Layer {
 
@@ -18,7 +20,19 @@ public class Layer {
 		this.d = d;
 		tiles = new Tile[d.width][d.height];
         this.collider = collider;
+        
+        for (Tile[] row : tiles) {
+            Arrays.fill(row, new BlankTile());
+        }
     }
+	
+	public void setTile(Tile tile, int x, int y) {
+		tiles[x][y] = tile; 
+	}
+	
+	public void setTile(Tile tile, Point p) {
+		tiles[p.x][p.y] = tile; 
+	}
 	
 	public boolean isCollider() {
 		return collider;
@@ -54,10 +68,20 @@ public class Layer {
 		for(int x=0; x<d.width;x++) {
 			for(int y=0; y<d.height;y++) {
 				if(!(tiles[x][y] instanceof BlankTile)) {
-					tiles[x][y].draw(g);
+					tiles[x][y].draw(g, x, y);
 				}
 			}
 		}
+	}
+	
+	public String test() {
+		String result = "";
+		for(Tile[] tiles : tiles) {
+			for(Tile tile : tiles) {
+				result += tile.test() + "\n";
+			}
+		}
+		return result;
 	}
 	
 }

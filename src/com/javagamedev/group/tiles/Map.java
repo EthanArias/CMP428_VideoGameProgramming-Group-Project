@@ -6,8 +6,18 @@ public class Map {
 
 	private Side[] sides = new Side[4];
 	
-	public Map() {
+	public Map(Side side1, Side side2, Side side3, Side side4) {
+		sides[0] = side1;
+		sides[1] = side2;
+		sides[2] = side3; // fixed index
+		sides[3] = side4; // fixed index
     }
+	
+	public void setSide(Side side, int i) {
+		if(i>=0 && i<sides.length) {
+			this.sides[i] = side;
+		}
+	}
 	
 	public Side[] getSides(){
 		return this.sides;
@@ -23,10 +33,17 @@ public class Map {
 		}
 	}
 	
-	public void draw(Graphics2D g) {
-		for(int i=0; i<4;i++) {
-			this.sides[i].draw(g);
-		}
+	public void draw(Graphics2D g, int i) {
+		this.sides[i].draw(g);
+	}
+	
+	public String test() {
+		String result = "";
+		result += "sides[0]: " + sides[0].test();
+		result += "sides[1]: " + sides[1].test();
+		result += "sides[2]: " + sides[2].test();
+		result += "sides[3]: " + sides[3].test();
+		return result;
 	}
 	
 }

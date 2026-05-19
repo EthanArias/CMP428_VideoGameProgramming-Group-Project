@@ -6,6 +6,7 @@ import java.awt.event.KeyEvent;
 
 import javax.swing.JPanel;
 
+import com.javagamedev.group.tiles.TileManager;
 import com.javagamedev.input.GameAction;
 import com.javagamedev.input.InputManager;
 
@@ -27,7 +28,8 @@ public class GamePanel extends JPanel {
 	
 	public GamePanel() {
 		inputManager = new InputManager(this);
-		
+		TileManager manager = new TileManager();
+		manager.test();
 		createInput();
 	}
 	

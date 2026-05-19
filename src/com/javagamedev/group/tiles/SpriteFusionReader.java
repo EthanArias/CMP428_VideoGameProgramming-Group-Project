@@ -83,7 +83,7 @@ public class SpriteFusionReader {
         JSONArray layers = root.optJSONArray("layers");
         if (layers == null) return mapData;
 
-        for (int i = 0; i < layers.length(); i++) {
+        for (int i = layers.length()-1; i > 0; i--) {
             JSONObject layerObj = layers.optJSONObject(i);
             if (layerObj == null) continue;
 
@@ -145,7 +145,7 @@ public class SpriteFusionReader {
     }
 
     public static void main(String[] args) {
-        Path path = Paths.get("res/maps/map.json");
+        Path path = Paths.get("res/maps/map_test.json");
         if (args != null && args.length > 0) {
             path = Paths.get(args[0]);
         }

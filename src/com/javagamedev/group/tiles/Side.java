@@ -1,33 +1,43 @@
 package com.javagamedev.group.tiles;
 
 import java.awt.Graphics2D;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Side {
 
-	private Layer[] layers;
+	private final List<Layer> layers = new ArrayList<Layer>();
 	
-	public Side(int layers) {
-		this.layers = new Layer[layers];
+	public Side() {
+		
     }
 	
-	public Layer[] getLayers(){
+	public List<Layer> getLayers(){
 		return this.layers;
 	}
 	
-	public Layer getLayer(int i) {
-		return this.layers[i];
+	public void addLayer(Layer layer) {
+		this.layers.add(layer);
 	}
 	
 	public void update(long elapsedms) {
-		for(int i=0; i<layers.length;i++) {
-			this.layers[i].update(elapsedms);
+		for(Layer layer : layers) {
+			layer.update(elapsedms);
 		}
 	}
 	
 	public void draw(Graphics2D g) {
-		for(int i=0; i<layers.length;i++) {
-			this.layers[i].draw(g);
+		for(Layer layer : layers) {
+			layer.draw(g);
 		}
+	}
+	
+	public String test() {
+		String result = "";
+		for(Layer layer : layers) {
+			result += "layer:" + layer.test() + "\n";
+		}
+		return result;
 	}
 	
 }

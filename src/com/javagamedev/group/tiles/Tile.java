@@ -8,16 +8,17 @@ import java.awt.image.BufferedImage;
 import com.javagamedev.graphics.Animation;
 
 public abstract class Tile {
-	protected Point position;
-	
 	public abstract void update(long elapsedms);
-	public abstract void draw(Graphics2D g);
+	public abstract void draw(Graphics2D g, int x, int y);
+	
+	public String test() {
+		String result = "TILE: TEST";
+		return result;
+	}
 	
 	public static class BlankTile extends Tile{
 		
-		public BlankTile(Point position) {
-			this.position = position;
-		}
+		public BlankTile() {}
 		
 		@Override
 		public void update(long elapsedms) {
@@ -25,7 +26,7 @@ public abstract class Tile {
 		}
 		
 		@Override
-		public void draw(Graphics2D g) {
+		public void draw(Graphics2D g, int x, int y) {
 			// does nothing
 		}
 		
@@ -34,9 +35,8 @@ public abstract class Tile {
 	public static class ImageTile extends Tile{
 		private Image img;
 		
-		public ImageTile(Image img, Point position) {
+		public ImageTile(Image img) {
 			this.img = img;
-			this.position = position;
 		}
 		
 		public Image getImage() {
@@ -53,10 +53,10 @@ public abstract class Tile {
 		}
 		
 		@Override
-		public void draw(Graphics2D g) {
+		public void draw(Graphics2D g, int x, int y) {
 			g.drawImage(img, 
-					position.x*img.getWidth(null), 
-					position.y*img.getHeight(null), 
+					x*img.getWidth(null), 
+					y*img.getHeight(null), 
 					img.getWidth(null), 
 					img.getHeight(null), 
 					null);
@@ -75,9 +75,8 @@ public abstract class Tile {
 			return anim;
 		}
 		
-		public void setImage(Animation anim, Point position) {
+		public void setImage(Animation anim) {
 			this.anim = anim;
-			this.position = position;
 		}
 		
 		@Override
@@ -86,12 +85,12 @@ public abstract class Tile {
 		}
 		
 		@Override
-		public void draw(Graphics2D g) {
+		public void draw(Graphics2D g, int x, int y) {
 			Image img = anim.getImage();
 			g.drawImage(
 					img, 
-					position.x*img.getWidth(null), 
-					position.y*img.getHeight(null), 
+					x*img.getWidth(null), 
+					y*img.getHeight(null), 
 					img.getWidth(null), 
 					img.getHeight(null), 
 					null);
