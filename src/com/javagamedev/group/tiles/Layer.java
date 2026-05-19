@@ -1,87 +1,84 @@
 package com.javagamedev.group.tiles;
 
-import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Point;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
-import com.javagamedev.group.tiles.Tile;
 import com.javagamedev.group.tiles.Tile.AnimationTile;
 import com.javagamedev.group.tiles.Tile.BlankTile;
-import com.javagamedev.group.tiles.Tile.ImageTile;
 
+/**
+ * Layer holds drawable tiles and, optionally, a sparse set of solid tile coordinates
+ * used for collision checks. Rendering and collision storage are separated.
+ */
 public class Layer {
 
-	private boolean collider;
-	private Tile[][] tiles;
-	private Dimension d;
-	
-	public Layer(Dimension d, boolean collider) {
-		this.d = d;
-		tiles = new Tile[d.width][d.height];
+    private final boolean collider;
+    private final ArrayList<Tile> tiles = new ArrayList<Tile>();
+    private final Set<Point> solidTiles = new HashSet<Point>();
+
+    public Layer(boolean collider) {
         this.collider = collider;
-        
-        for (Tile[] row : tiles) {
-            Arrays.fill(row, new BlankTile());
+    }
+
+    /**
+     * Add a tile for rendering. If this layer is a collider and the tile position
+     * should be considered solid, also call addSolidAt.
+     */
+    public void addTile(Tile tile) {
+        this.tiles.add(tile);
+    }
+
+    /**
+     * Mark a tile coordinate as solid for collision checks.
+     * Use only when layer.isCollider() is true.
+     */
+    public void addSolidAt(Point p) {
+        if (p != null) {
+            // store a defensive copy to avoid external mutation issues
+            this.solidTiles.add(new Point(p));
         }
     }
-	
-	public void setTile(Tile tile, int x, int y) {
-		tiles[x][y] = tile; 
-	}
-	
-	public void setTile(Tile tile, Point p) {
-		tiles[p.x][p.y] = tile; 
-	}
-	
-	public boolean isCollider() {
-		return collider;
-	}
-	
-	public Tile[][] getTiles(){
-		return tiles;
-	}
-	
-	public Dimension getDimensions(){
-		return d;
-	}
-	
-	public Tile getTile(int x, int y) {
-		return tiles[x][y];
-	}
-	
-	public Tile getTile(Point p) {
-		return tiles[p.x][p.y];
-	}
-	
-	public void update(long elapsedms) {
-		for(int x=0; x<d.width;x++) {
-			for(int y=0; y<d.height;y++) {
-				if(tiles[x][y] instanceof AnimationTile) {
-					tiles[x][y].update(elapsedms);
-				}
-			}
-		}
-	}
-	
-	public void draw(Graphics2D g) {
-		for(int x=0; x<d.width;x++) {
-			for(int y=0; y<d.height;y++) {
-				if(!(tiles[x][y] instanceof BlankTile)) {
-					tiles[x][y].draw(g, x, y);
-				}
-			}
-		}
-	}
-	
-	public String test() {
-		String result = "";
-		for(Tile[] tiles : tiles) {
-			for(Tile tile : tiles) {
-				result += tile.test() + "\n";
-			}
-		}
-		return result;
-	}
-	
+
+    public boolean isCollider() {
+        return collider;
+    }
+
+    public List<Tile> getTiles() {
+        return tiles;
+    }
+
+    /**
+     * Check whether a tile coordinate is solid (collision).
+     */
+    public boolean isSolidAt(Point p) {
+        return solidTiles.contains(p);
+    }
+
+    public void update(long elapsedms) {
+        for (Tile tile : tiles) {
+            if (tile instanceof AnimationTile) {
+                tile.update(elapsedms);
+            }
+        }
+    }
+
+    public void draw(Graphics2D g) {
+        for (Tile tile : tiles) {
+            if (!(tile instanceof BlankTile)) {
+                tile.draw(g);
+            }
+        }
+    }
+
+    public String test() {
+        StringBuilder result = new StringBuilder();
+        for (Tile tile : tiles) {
+            result.append(tile.test()).append("\n");
+        }
+        return result.toString();
+    }
 }

@@ -1,5 +1,6 @@
 package com.javagamedev.group.tiles;
 
+import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
 import java.util.List;
@@ -7,10 +8,15 @@ import java.util.List;
 public class Side {
 
 	private final List<Layer> layers = new ArrayList<Layer>();
+	private Dimension d;
 	
-	public Side() {
-		
+	public Side(Dimension d) {
+		this.d = d;
     }
+	
+	public Dimension getDimensions() {
+		return d;
+	}
 	
 	public List<Layer> getLayers(){
 		return this.layers;
