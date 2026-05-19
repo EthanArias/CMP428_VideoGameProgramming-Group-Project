@@ -2,6 +2,7 @@ package com.javagamedev.group;
 
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 
 import javax.swing.JPanel;
@@ -17,6 +18,8 @@ public class GamePanel extends JPanel {
 	public static final Dimension SIZE = new Dimension (400,400);
 	public static final int TILE_SIZE = 0;
 	
+	TileManager tileManager;
+	
 	// INPUT
 	private GameAction jump;
 	private GameAction left;
@@ -28,15 +31,17 @@ public class GamePanel extends JPanel {
 	
 	public GamePanel() {
 		inputManager = new InputManager(this);
-		TileManager manager = new TileManager();
-		manager.test();
+		tileManager = new TileManager(this);
+		initJSettings();
 		createInput();
 	}
 	
-	private void setPanelSize() {
+	private void initJSettings() {
 		this.setMinimumSize(SIZE);
 		this.setPreferredSize(SIZE);
 		this.setMaximumSize(SIZE);
+		
+		this.setDoubleBuffered(true);
 	}
 	
 	public void update(double elapsedUnits) {
@@ -51,6 +56,9 @@ public class GamePanel extends JPanel {
 	
 	public void paintComponent(Graphics g) {
 		super.paintComponents(g);
+		Graphics2D g2 = (Graphics2D)g;
+		
+		tileManager.draw(g2);
 	}
 	
 	private void createInput() {
