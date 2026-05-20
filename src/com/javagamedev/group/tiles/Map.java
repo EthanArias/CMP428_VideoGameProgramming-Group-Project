@@ -9,8 +9,11 @@ public class Map {
 	public Map(Side side1, Side side2, Side side3, Side side4) {
 		sides[0] = side1;
 		sides[1] = side2;
-		sides[2] = side3; // fixed index
-		sides[3] = side4; // fixed index
+		sides[2] = side3;
+		sides[3] = side4;
+    }
+	
+	public Map() {
     }
 	
 	public void setSide(Side side, int i) {
