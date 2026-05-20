@@ -14,9 +14,9 @@ public abstract class Entity {
 
 	protected GamePanel gamePanel;
 	
-	public Point.Float position;
+	public Point.Float position = new Point.Float(0, 0);
 	protected Point.Float velocity = new Point.Float(0, 0);
-	protected int speed;
+	protected float speed;
 	
 	public enum AnimationState {IDLE, MOVE, JUMP, CELEBRATE};
 	protected AnimationState situation = AnimationState.IDLE;
@@ -68,7 +68,7 @@ public abstract class Entity {
         this.position.x = x;
         this.position.y = y;
     }
-
+    
     /**
         Gets this Entity's dimensions, based on the size of the
         current image.
@@ -90,8 +90,15 @@ public abstract class Entity {
 	    per millisecond.
 	*/
     public void move(float dx, float dy) {
-    	this.velocity = new Point.Float(dx, dy);
-    }
+		if(dx>0) {
+			this.facing = FacingState.RIGHT;
+		}
+		else if(dx<0) {
+			this.facing = FacingState.LEFT;
+		}
+		
+		this.velocity = new Point.Float(dx, dy);
+	}
 
     /**
         Gets this Entity's Entity image.
