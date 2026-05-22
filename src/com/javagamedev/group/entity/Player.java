@@ -134,6 +134,25 @@ public class Player extends Entity {
 	    }
 	}
     
+	private void updateAnimaitonState(long elapsedMs) {
+		float oldX = worldPosition.x;
+		float oldY = worldPosition.y;
+		
+		float newX = worldPosition.x + velocity.x * elapsedMs;
+		float newY = worldPosition.y + velocity.y * elapsedMs;
+		
+		if(newX != oldX) {
+			this.anim = move_animation;
+		}
+		else if(newY < oldY) {
+			this.anim = jump_animation;
+		}
+		else {
+			this.anim = idle_forward_animation;
+		}
+		
+	}
+	
 	@Override
 	public void draw(Graphics2D g) {
 		// because sprite sheets only draw right, we must manualy reverse for left
@@ -161,6 +180,7 @@ public class Player extends Entity {
 	*/
 	public void update(long elapsedMs) {
 		clampVelocity();
+		updateAnimaitonState(elapsedMs);
 		
 		// Check tile collision
 		this.gamePanel.collisionChecker.checkTile(this);
