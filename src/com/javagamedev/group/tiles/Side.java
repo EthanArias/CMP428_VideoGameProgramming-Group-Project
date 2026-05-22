@@ -2,6 +2,7 @@ package com.javagamedev.group.tiles;
 
 import java.awt.Dimension;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,6 +25,23 @@ public class Side {
 	
 	public void addLayer(Layer layer) {
 		this.layers.add(layer);
+	}
+	
+	public boolean isAnyCollideableAt(Point p) {
+		return isAnyCollideableAt(p.x, p.y);
+	}
+	
+	public boolean isAnyCollideableAt(float x, float y) {
+		return isAnyCollideableAt((int) x, (int) y);
+	}
+	
+	public boolean isAnyCollideableAt(int row, int col) {
+		for(Layer layer: layers) {
+			if(layer.isCollider() && layer.isSolidAt(new Point(row, col))) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	public void update(long elapsedms) {

@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.event.KeyEvent;
 
 import javax.swing.JPanel;
@@ -35,8 +36,11 @@ public class GamePanel extends JPanel {
 	public final static int WORLD_WIDTH = TILE_SIZE*MAX_SCREEN_COL;
 	public final static int WORLD_HEIGHT = TILE_SIZE*MAX_SCREEN_ROW;
 	
+	public static final float GRAVITY = 0.005f;
+	
 	// BACKGROUND / TILES
-	TileManager tileManager;
+	public final TileManager tileManager = new TileManager(this);
+	public final  CollisionChecker collisionChecker = new CollisionChecker(this);
 	
 	// MIDDLE GROUND / PLAYER
 	private Player player = new Player(this);
@@ -50,17 +54,15 @@ public class GamePanel extends JPanel {
 	private GameAction shift;
 	private GameAction debugAction;
 	private GameAction escapeAction;
-	private InputManager inputManager;
+	public final  InputManager inputManager = new InputManager(this);
 	
 	public GamePanel() {
-		inputManager = new InputManager(this);
-		tileManager = new TileManager(this);
 		initJSettings();
 		createInput();
 		
-		this.player.setPosition(
-				player.getPosition().x, 
-				SCREEN_HEIGHT-player.getImage().getHeight(null));
+		this.player.setWorldPosition(
+				player.getWorldPosition().x, 
+				SCREEN_HEIGHT-player.getImage().getHeight(null)-TILE_SIZE*3);
 	}
 	
 	private void initJSettings() {
@@ -86,6 +88,7 @@ public class GamePanel extends JPanel {
 	private void updatePlayer(long elapsedMS) {
 		float speed = player.getSpeed();
 		float dx = 0f;
+		float dy = 0f;
 		
 		if (left.isPressed()) {
 			dx -= speed;  
@@ -94,8 +97,14 @@ public class GamePanel extends JPanel {
 			dx += speed;
 		}
 		
+		if(jump.isPressed()) {
+			player.jump(false);
+		}
+		
+		dy = player.getVelocity().y+GRAVITY*elapsedMS;
+		
 		// apply gravity into vertical velocity and move
-		player.move(dx, 0);
+		player.move(dx, dy);
 		player.update(elapsedMS);
 	}
 	
@@ -115,6 +124,13 @@ public class GamePanel extends JPanel {
 		// UI
 		
 		g2.dispose();
+	}
+	
+	public Point pixelsToTiles(Point.Float pixels) {
+		Point tiles = new Point();
+		tiles.x = (int) Math.floor((pixels.x + 0) / TILE_SIZE);
+		tiles.y = (int) Math.floor((pixels.y + 0) / TILE_SIZE);
+		return tiles;
 	}
 	
 	private void createInput() {
@@ -137,6 +153,14 @@ public class GamePanel extends JPanel {
 		
 		inputManager.mapToKey(debugAction, KeyEvent.VK_Q);
 		inputManager.mapToKey(escapeAction, KeyEvent.VK_ESCAPE);
+	}
+	
+	public TileManager getTileManager() {
+		return this.tileManager;
+	}
+	
+	public CollisionChecker getCollisionChecker() {
+		return this.collisionChecker;
 	}
 	
 }

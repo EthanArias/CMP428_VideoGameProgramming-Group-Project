@@ -1,19 +1,29 @@
 package com.javagamedev.group.entity;
 
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 
 import com.javagamedev.graphics.Animation;
-import com.javagamedev.group.Game;
 import com.javagamedev.group.GamePanel;
 
 public class Player extends Entity {
+	
+	private static final float JUMP_SPEED = -0.95f;
+	
+	private boolean onGround;
 	
     public Player(GamePanel gamePanel){
     	super(gamePanel);
     	// set a default speed so movement input actually moves the player
     	this.speed = 0.35f;
+    	this.maxAcceleration = 1;
+    	
     	initAnimations();
+    	this.hitBox = new Rectangle(
+    			0, 0, 
+    			this.anim.getImage().getWidth(gamePanel), 
+    			this.anim.getImage().getHeight(gamePanel));
     }
     
     private void initAnimations() {
@@ -105,14 +115,52 @@ public class Player extends Entity {
 		return this.speed;
 	}
 	
+    public void collideVertical() {
+        // check if collided with ground
+        if (this.getVelocity().y > 0) {
+            onGround = true;
+        }
+        super.collideVertical();
+    }
+    
+    /**
+	    Makes the player jump if the player is on the ground or
+	    if forceJump is true.
+	*/
+	public void jump(boolean forceJump) {
+	    if (onGround || forceJump) {
+	        onGround = false;
+	        this.move(this.getVelocity().x, JUMP_SPEED);
+	    }
+	}
+    
+	private void updateAnimaitonState(long elapsedMs) {
+		float oldX = worldPosition.x;
+		float oldY = worldPosition.y;
+		
+		float newX = worldPosition.x + velocity.x * elapsedMs;
+		float newY = worldPosition.y + velocity.y * elapsedMs;
+		
+		if(newX != oldX) {
+			this.anim = move_animation;
+		}
+		else if(newY < oldY) {
+			this.anim = jump_animation;
+		}
+		else {
+			this.anim = idle_forward_animation;
+		}
+		
+	}
+	
 	@Override
 	public void draw(Graphics2D g) {
 		// because sprite sheets only draw right, we must manualy reverse for left
 		if (this.facing == FacingState.LEFT) {
 			g.drawImage(
 					this.anim.getImage(), 
-					(int)position.x+anim.getImage().getWidth(gamePanel), 
-					(int)position.y, 
+					(int)worldPosition.x+anim.getImage().getWidth(gamePanel), 
+					(int)worldPosition.y, 
 					-this.anim.getImage().getWidth(gamePanel), 
 					this.anim.getImage().getHeight(gamePanel), 
 					gamePanel);
@@ -120,8 +168,8 @@ public class Player extends Entity {
 		else {
 			g.drawImage(
 					this.anim.getImage(), 
-					(int)position.x, 
-					(int)position.y,
+					(int)worldPosition.x, 
+					(int)worldPosition.y,
 					gamePanel);
 		}
 	}
@@ -131,8 +179,14 @@ public class Player extends Entity {
 	    on the velocity.
 	*/
 	public void update(long elapsedMs) {
-	    position.x += velocity.x * elapsedMs;
-	    position.y += velocity.y * elapsedMs;
+		clampVelocity();
+		updateAnimaitonState(elapsedMs);
+		
+		// Check tile collision
+		this.gamePanel.collisionChecker.checkTile(this);
+		
+		worldPosition.x += velocity.x * elapsedMs;
+		worldPosition.y += velocity.y * elapsedMs;
 	    anim.update(elapsedMs);
 	}
 

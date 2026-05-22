@@ -75,9 +75,9 @@ public class Layer {
     }
 
     public String test() {
-        StringBuilder result = new StringBuilder();
-        for (Tile tile : tiles) {
-            result.append(tile.test()).append("\n");
+    	String result = "";
+        if(this.collider == true) {
+        	result += "Collision";
         }
         return result.toString();
     }

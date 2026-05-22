@@ -14,9 +14,10 @@ public abstract class Entity {
 
 	protected GamePanel gamePanel;
 	
-	public Point.Float position = new Point.Float(0, 0);
+	public Point.Float worldPosition = new Point.Float(0, 0);
 	protected Point.Float velocity = new Point.Float(0, 0);
 	protected float speed;
+	protected float maxAcceleration = speed;
 	
 	public enum AnimationState {IDLE, MOVE, JUMP, CELEBRATE};
 	protected AnimationState situation = AnimationState.IDLE;
@@ -30,7 +31,6 @@ public abstract class Entity {
 	
 	// Collision detection
 	protected Rectangle hitBox;
-	protected boolean collision = false;
 	protected int solidAreaDefaultX = 0;
 	protected int solidAreaDefaultY = 0;
 
@@ -54,20 +54,45 @@ public abstract class Entity {
 		return facing;
 	}
     
+	public Rectangle getHitBox() {
+		return hitBox;
+	}
+	
+	public float getSpeed() {
+		return this.speed;
+	}
+	
     /**
-        Gets this Entity's current position.
+        Gets this Entity's current worldPosition.
     */
-    public Point.Float getPosition() {
-        return position;
+    public Point.Float getWorldPosition() {
+        return worldPosition;
     }
-
+    
     /**
-        Sets this Entity's current position.
+        Sets this Entity's current worldPosition.
     */
-    public void setPosition(float x, float y) {
-        this.position.x = x;
-        this.position.y = y;
+    public void setWorldPosition(float x, float y) {
+        this.worldPosition.x = x;
+        this.worldPosition.y = y;
     }
+    
+    /**
+	    Called before update() if the Entity collided with a
+	    tile horizontally.
+	*/
+	public void collideHorizontal() {
+	    this.move(0, this.getVelocity().y);
+	}
+	
+	
+	/**
+	    Called before update() if the Entity collided with a
+	    tile vertically.
+	*/
+	public void collideVertical() {
+		this.move(this.getVelocity().x, 0);
+	}
     
     /**
         Gets this Entity's dimensions, based on the size of the
@@ -85,6 +110,21 @@ public abstract class Entity {
         return this.velocity;
     }
 
+    protected void clampVelocity() {
+    	if(velocity.x > maxAcceleration) {
+			velocity.x = maxAcceleration;
+		}
+		else if(velocity.x < -maxAcceleration) {
+			velocity.x = -maxAcceleration;
+		}
+		if(velocity.y > maxAcceleration) {
+			velocity.y = maxAcceleration;
+		}
+		else if(velocity.y < -maxAcceleration) {
+			velocity.y = -maxAcceleration;
+		}
+    }
+    
     /**
 	    Sets the velocity of this Entity in pixels
 	    per millisecond.
