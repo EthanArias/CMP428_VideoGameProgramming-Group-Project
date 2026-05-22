@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.event.KeyEvent;
 
 import javax.swing.JPanel;
@@ -97,7 +98,7 @@ public class GamePanel extends JPanel {
 		}
 		
 		if(jump.isPressed()) {
-			player.jump();
+			player.jump(false);
 		}
 		
 		// apply gravity into vertical velocity and move
@@ -121,6 +122,13 @@ public class GamePanel extends JPanel {
 		// UI
 		
 		g2.dispose();
+	}
+	
+	public Point.Float pixelsToTiles(Point.Float pixels) {
+		Point.Float tiles = new Point.Float();
+		tiles.x = (float) Math.floor((pixels.x + 0) / TILE_SIZE);
+		tiles.y = (float) Math.floor((pixels.y + 0) / TILE_SIZE);
+		return tiles;
 	}
 	
 	private void createInput() {

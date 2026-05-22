@@ -30,7 +30,6 @@ public abstract class Entity {
 	
 	// Collision detection
 	protected Rectangle hitBox;
-	protected boolean collision = false;
 	protected int solidAreaDefaultX = 0;
 	protected int solidAreaDefaultY = 0;
 
@@ -68,7 +67,7 @@ public abstract class Entity {
     public Point.Float getWorldPosition() {
         return worldPosition;
     }
-
+    
     /**
         Sets this Entity's current worldPosition.
     */
@@ -77,13 +76,22 @@ public abstract class Entity {
         this.worldPosition.y = y;
     }
     
-    public boolean getCollision() {
-    	return this.collision;
-    }
-    
-    public void setCollision(boolean collision) {
-    	this.collision = collision;
-    }
+    /**
+	    Called before update() if the Entity collided with a
+	    tile horizontally.
+	*/
+	public void collideHorizontal() {
+	    this.move(0, this.getVelocity().y);
+	}
+	
+	
+	/**
+	    Called before update() if the Entity collided with a
+	    tile vertically.
+	*/
+	public void collideVertical() {
+		this.move(this.getVelocity().x, 0);
+	}
     
     /**
         Gets this Entity's dimensions, based on the size of the

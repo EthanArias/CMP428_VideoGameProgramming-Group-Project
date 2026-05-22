@@ -31,10 +31,13 @@ public class Side {
 		return isAnyCollideableAt(p.x, p.y);
 	}
 	
+	public boolean isAnyCollideableAt(float x, float y) {
+		return isAnyCollideableAt((int) x, (int) y);
+	}
+	
 	public boolean isAnyCollideableAt(int col, int row) {
 		for(Layer layer: layers) {
-			// use (col,row) order — layers store Points as (x=col, y=row)
-			if(layer.isCollider() && layer.isSolidAt(new Point(col, row))) {
+			if(layer.isCollider() && layer.isSolidAt(new Point(row, col))) {
 				return true;
 			}
 		}

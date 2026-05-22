@@ -10,8 +10,8 @@ import com.javagamedev.group.GamePanel;
 public class Player extends Entity {
 	
 	private static final float JUMP_SPEED = -.95f;
-
-    private boolean onGround;
+	
+	private boolean onGround;
 	
     public Player(GamePanel gamePanel){
     	super(gamePanel);
@@ -110,42 +110,28 @@ public class Player extends Entity {
     	anim = this.idle_forward_animation;
     }
     
-    /**
-	    Makes the player jump if the player is on the ground or
-	    if forceJump is true.
-	*/
-    public void jump() {
-        if (onGround) {
-            this.velocity.y = -JUMP_SPEED;
-            this.onGround = false;
-        }
-    }
+    public float getSpeed() {
+		return this.speed;
+	}
 	
-	public void collideHorizontal() {
-        move(0, this.getVelocity().y);
-    }
-
-
     public void collideVertical() {
         // check if collided with ground
         if (this.getVelocity().y > 0) {
             onGround = true;
         }
-        move(this.getVelocity().x, 0);
+        super.collideVertical();
     }
-
-
-    public void setY(float y) {
-        // check if falling
-        if (Math.round(y) > Math.round(this.getVelocity().y)) {
-            onGround = false;
-        }
-        this.setWorldPosition(this.getWorldPosition().x, y);
-    }
-	
-    private void updateStates() {
-    	
-    }
+    
+    /**
+	    Makes the player jump if the player is on the ground or
+	    if forceJump is true.
+	*/
+	public void jump(boolean forceJump) {
+	    if (onGround || forceJump) {
+	        onGround = false;
+	        this.move(this.getVelocity().y, JUMP_SPEED);
+	    }
+	}
     
 	@Override
 	public void draw(Graphics2D g) {
@@ -173,19 +159,12 @@ public class Player extends Entity {
 	    on the velocity.
 	*/
 	public void update(long elapsedMs) {
-	    // Check tile collision per-axis; returns allowed multipliers for X and Y
-	    java.awt.Point.Float allowed = 
-	    		this.gamePanel.collisionChecker.checkTile(this, elapsedMs);
-
-	    // Apply movement per axis using allowed multipliers
-	    worldPosition.x += velocity.x * elapsedMs * allowed.x;
-	    worldPosition.y += velocity.y * elapsedMs * allowed.y;
-
-	    // collision flag already set inside checkTile; keep it consistent
-	    this.collision = (allowed.x == 0f) || (allowed.y == 0f);
-
-	    // always update animation
-	    updateStates();
+		
+		// Check tile collision
+		this.gamePanel.collisionChecker.checkTile(this);
+		
+		worldPosition.x += velocity.x * elapsedMs;
+		worldPosition.y += velocity.y * elapsedMs;
 	    anim.update(elapsedMs);
 	}
 
