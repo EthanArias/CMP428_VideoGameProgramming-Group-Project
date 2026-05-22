@@ -9,7 +9,7 @@ import com.javagamedev.group.GamePanel;
 
 public class Player extends Entity {
 	
-	private static final float JUMP_SPEED = -.95f;
+	private static final float JUMP_SPEED = -0.95f;
 	
 	private boolean onGround;
 	
@@ -17,6 +17,7 @@ public class Player extends Entity {
     	super(gamePanel);
     	// set a default speed so movement input actually moves the player
     	this.speed = 0.35f;
+    	this.maxAcceleration = 1;
     	
     	initAnimations();
     	this.hitBox = new Rectangle(
@@ -129,7 +130,7 @@ public class Player extends Entity {
 	public void jump(boolean forceJump) {
 	    if (onGround || forceJump) {
 	        onGround = false;
-	        this.move(this.getVelocity().y, JUMP_SPEED);
+	        this.move(this.getVelocity().x, JUMP_SPEED);
 	    }
 	}
     
@@ -159,6 +160,7 @@ public class Player extends Entity {
 	    on the velocity.
 	*/
 	public void update(long elapsedMs) {
+		clampVelocity();
 		
 		// Check tile collision
 		this.gamePanel.collisionChecker.checkTile(this);

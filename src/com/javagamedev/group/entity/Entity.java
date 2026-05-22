@@ -17,6 +17,7 @@ public abstract class Entity {
 	public Point.Float worldPosition = new Point.Float(0, 0);
 	protected Point.Float velocity = new Point.Float(0, 0);
 	protected float speed;
+	protected float maxAcceleration = speed;
 	
 	public enum AnimationState {IDLE, MOVE, JUMP, CELEBRATE};
 	protected AnimationState situation = AnimationState.IDLE;
@@ -109,6 +110,21 @@ public abstract class Entity {
         return this.velocity;
     }
 
+    protected void clampVelocity() {
+    	if(velocity.x > maxAcceleration) {
+			velocity.x = maxAcceleration;
+		}
+		else if(velocity.x < -maxAcceleration) {
+			velocity.x = -maxAcceleration;
+		}
+		if(velocity.y > maxAcceleration) {
+			velocity.y = maxAcceleration;
+		}
+		else if(velocity.y < -maxAcceleration) {
+			velocity.y = -maxAcceleration;
+		}
+    }
+    
     /**
 	    Sets the velocity of this Entity in pixels
 	    per millisecond.

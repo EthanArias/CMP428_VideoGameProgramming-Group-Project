@@ -36,7 +36,7 @@ public class GamePanel extends JPanel {
 	public final static int WORLD_WIDTH = TILE_SIZE*MAX_SCREEN_COL;
 	public final static int WORLD_HEIGHT = TILE_SIZE*MAX_SCREEN_ROW;
 	
-	public static final float GRAVITY = 0.002f;
+	public static final float GRAVITY = 0.005f;
 	
 	// BACKGROUND / TILES
 	public final TileManager tileManager = new TileManager(this);
@@ -88,7 +88,7 @@ public class GamePanel extends JPanel {
 	private void updatePlayer(long elapsedMS) {
 		float speed = player.getSpeed();
 		float dx = 0f;
-		float dy = player.getVelocity().y+GRAVITY*elapsedMS;
+		float dy = 0f;
 		
 		if (left.isPressed()) {
 			dx -= speed;  
@@ -100,6 +100,8 @@ public class GamePanel extends JPanel {
 		if(jump.isPressed()) {
 			player.jump(false);
 		}
+		
+		dy = player.getVelocity().y+GRAVITY*elapsedMS;
 		
 		// apply gravity into vertical velocity and move
 		player.move(dx, dy);
@@ -124,10 +126,10 @@ public class GamePanel extends JPanel {
 		g2.dispose();
 	}
 	
-	public Point.Float pixelsToTiles(Point.Float pixels) {
-		Point.Float tiles = new Point.Float();
-		tiles.x = (float) Math.floor((pixels.x + 0) / TILE_SIZE);
-		tiles.y = (float) Math.floor((pixels.y + 0) / TILE_SIZE);
+	public Point pixelsToTiles(Point.Float pixels) {
+		Point tiles = new Point();
+		tiles.x = (int) Math.floor((pixels.x + 0) / TILE_SIZE);
+		tiles.y = (int) Math.floor((pixels.y + 0) / TILE_SIZE);
 		return tiles;
 	}
 	

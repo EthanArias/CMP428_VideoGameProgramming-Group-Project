@@ -25,7 +25,8 @@ public class CollisionChecker {
         	return;
         }
         
-        Point.Float entityPos = this.gamePanel.pixelsToTiles(entity.getWorldPosition());
+        Point entityPos = this.gamePanel.pixelsToTiles(entity.getWorldPosition());
+        
         // moveing right
         if(entity.getVelocity().x > 0) {
         	if(tileMap.isAnyCollideableAt(entityPos.x+1, entityPos.y)) {
@@ -34,19 +35,19 @@ public class CollisionChecker {
         }
         // moveing left
         else if(entity.getVelocity().x < 0) {
-        	if(tileMap.isAnyCollideableAt(entityPos.x-1, entityPos.y)) {
+        	if(tileMap.isAnyCollideableAt(entityPos.x, entityPos.y)) {
         		entity.collideHorizontal();
         	}
         }
         
         // jumping
-        if(entity.getVelocity().y > 0) {
+        if(entity.getVelocity().y < 0) {
         	if(tileMap.isAnyCollideableAt(entityPos.x, entityPos.y-1)) {
         		entity.collideVertical();
         	}
         }
         // falling
-        else if(entity.getVelocity().y < 0) {
+        else if(entity.getVelocity().y > 0) {
         	if(tileMap.isAnyCollideableAt(entityPos.x, entityPos.y+1)) {
         		entity.collideVertical();
         	}

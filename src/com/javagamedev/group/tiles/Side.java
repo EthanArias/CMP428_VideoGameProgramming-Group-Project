@@ -35,7 +35,7 @@ public class Side {
 		return isAnyCollideableAt((int) x, (int) y);
 	}
 	
-	public boolean isAnyCollideableAt(int col, int row) {
+	public boolean isAnyCollideableAt(int row, int col) {
 		for(Layer layer: layers) {
 			if(layer.isCollider() && layer.isSolidAt(new Point(row, col))) {
 				return true;
