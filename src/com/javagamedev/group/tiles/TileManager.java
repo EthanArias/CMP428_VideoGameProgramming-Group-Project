@@ -25,8 +25,8 @@ public class TileManager {
     public TileManager(GamePanel gamePanel) {
     	this.gamePanel = gamePanel;
     	
-        set = new TileSet("res/images/tilesets/tileGridTest.png", 64);
-        Side side1 = readMapJSON("res/maps/mapTest_side1.json");
+        set = new TileSet("res/images/tilesets/spritesheet_test.png", 16, 48);
+        Side side1 = readMapJSON("res/maps/map_test.json");
         this.map = new Map(side1, side1, side1, side1);
     }
 
@@ -80,7 +80,7 @@ public class TileManager {
 
                         // Only add to collision set if this layer is marked as collider
                         // and the tile id represents a solid tile.
-                        if (layer.isCollider() && isSolidTile(id)) {
+                        if (layer.isCollider()) {
                             layer.addSolidAt(p);
                         }
                     }
@@ -98,19 +98,6 @@ public class TileManager {
             e.printStackTrace();
         }
         return null;
-    }
-
-    /**
-     * Simple heuristic to decide whether a tile id should be considered solid.
-     * Replace this with editor metadata or a configurable set of solid IDs.
-     *
-     * Current rule:
-     *  - id < 0 : not solid
-     *  - id == 0 : treat as blank / decorative (not solid)
-     *  - id > 0 : solid by default
-     */
-    private static boolean isSolidTile(int id) {
-        return id > 0;
     }
 
     private static int parseId(JSONObject obj, String key) {
@@ -142,6 +129,13 @@ public class TileManager {
 
     public void draw(Graphics2D g) {
     	map.draw(g, 0);
+    }
+    
+    /**
+     * This is a temerary class that will be replaced for perspective shifting funcionality
+     */
+    public Side getTempSide() {
+    	return map.getSide(0);
     }
     
 }

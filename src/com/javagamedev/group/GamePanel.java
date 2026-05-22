@@ -35,8 +35,11 @@ public class GamePanel extends JPanel {
 	public final static int WORLD_WIDTH = TILE_SIZE*MAX_SCREEN_COL;
 	public final static int WORLD_HEIGHT = TILE_SIZE*MAX_SCREEN_ROW;
 	
+	public static final float GRAVITY = 0.002f;
+	
 	// BACKGROUND / TILES
-	TileManager tileManager;
+	public final TileManager tileManager = new TileManager(this);
+	public final  CollisionChecker collisionChecker = new CollisionChecker(this);
 	
 	// MIDDLE GROUND / PLAYER
 	private Player player = new Player(this);
@@ -50,17 +53,15 @@ public class GamePanel extends JPanel {
 	private GameAction shift;
 	private GameAction debugAction;
 	private GameAction escapeAction;
-	private InputManager inputManager;
+	public final  InputManager inputManager = new InputManager(this);
 	
 	public GamePanel() {
-		inputManager = new InputManager(this);
-		tileManager = new TileManager(this);
 		initJSettings();
 		createInput();
 		
-		this.player.setPosition(
-				player.getPosition().x, 
-				SCREEN_HEIGHT-player.getImage().getHeight(null));
+		this.player.setWorldPosition(
+				player.getWorldPosition().x, 
+				SCREEN_HEIGHT-player.getImage().getHeight(null)-TILE_SIZE*3);
 	}
 	
 	private void initJSettings() {
@@ -86,6 +87,7 @@ public class GamePanel extends JPanel {
 	private void updatePlayer(long elapsedMS) {
 		float speed = player.getSpeed();
 		float dx = 0f;
+		float dy = player.getVelocity().y+GRAVITY*elapsedMS;
 		
 		if (left.isPressed()) {
 			dx -= speed;  
@@ -94,8 +96,12 @@ public class GamePanel extends JPanel {
 			dx += speed;
 		}
 		
+		if(jump.isPressed()) {
+			player.jump();
+		}
+		
 		// apply gravity into vertical velocity and move
-		player.move(dx, 0);
+		player.move(dx, dy);
 		player.update(elapsedMS);
 	}
 	
@@ -137,6 +143,14 @@ public class GamePanel extends JPanel {
 		
 		inputManager.mapToKey(debugAction, KeyEvent.VK_Q);
 		inputManager.mapToKey(escapeAction, KeyEvent.VK_ESCAPE);
+	}
+	
+	public TileManager getTileManager() {
+		return this.tileManager;
+	}
+	
+	public CollisionChecker getCollisionChecker() {
+		return this.collisionChecker;
 	}
 	
 }
