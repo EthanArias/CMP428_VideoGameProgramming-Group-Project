@@ -81,6 +81,9 @@ public class GamePanel extends JPanel {
 		if(escapeAction.isPressed()) {
 			System.exit(0);
 		}
+		if(shift.isPressed()) {
+			System.out.println("TEST");
+		}
 		
 		updatePlayer((long)elapsedMS);
 	}

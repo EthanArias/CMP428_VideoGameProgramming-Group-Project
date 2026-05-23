@@ -26,7 +26,7 @@ public class TileManager {
     	this.gamePanel = gamePanel;
     	
         set = new TileSet("res/images/tilesets/spritesheet_test.png", 16, 48);
-        Side side1 = readMapJSON("res/maps/map_test.json");
+        Side side1 = readMapJSON("res/maps/map_side1.json");
         this.map = new Map(side1, side1, side1, side1);
     }
 
