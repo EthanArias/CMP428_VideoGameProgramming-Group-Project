@@ -26,12 +26,11 @@ public class TileManager {
     	this.gamePanel = gamePanel;
     	
         set = new TileSet("res/images/tilesets/spritesheet_test.png", 16, 48);
-        this.map = new Map(
-        		readMapJSON("res/maps/map_side1.json"), 
-        		readMapJSON("res/maps/map_side1.json"), 
-        		readMapJSON("res/maps/map_side1.json"), 
-        		readMapJSON("res/maps/map_side1.json")
-        		);
+        this.map = new Map();
+        this.map.setSide(readMapJSON("res/maps/map_side0.json"), 0);
+        this.map.setSide(readMapJSON("res/maps/map_side1.json"), 1);
+        this.map.setSide(readMapJSON("res/maps/map_side2.json"), 2);
+        this.map.setSide(readMapJSON("res/maps/map_side3.json"), 3);
     }
 
     public void test() {
@@ -132,14 +131,14 @@ public class TileManager {
     }
 
     public void draw(Graphics2D g) {
-    	map.draw(g, 0);
+    	map.draw(g, 3);
     }
     
     /**
      * This is a temerary class that will be replaced for perspective shifting funcionality
      */
     public Side getTempSide() {
-    	return map.getSide(0);
+    	return map.getSide(3);
     }
     
 }
