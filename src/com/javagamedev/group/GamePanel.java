@@ -24,8 +24,8 @@ public class GamePanel extends JPanel {
 	private final static int scale = 3;
 
 	public final static int TILE_SIZE = originalTileSize * scale; // 48x48 tile
-	public final static int MAX_SCREEN_COL = 16;
-	public final static int MAX_SCREEN_ROW = 12;
+	public final static int MAX_SCREEN_COL = 10;
+	public final static int MAX_SCREEN_ROW = 8;
 	public final static int SCREEN_WIDTH = TILE_SIZE * MAX_SCREEN_COL; // 768 pixels
 	public final static int SCREEN_HEIGHT = TILE_SIZE * MAX_SCREEN_ROW; // 576 pixels
 	public final static Dimension SIZE = new Dimension (SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -61,8 +61,8 @@ public class GamePanel extends JPanel {
 		createInput();
 		
 		this.player.setWorldPosition(
-				player.getWorldPosition().x, 
-				SCREEN_HEIGHT-player.getImage().getHeight(null)-TILE_SIZE*3);
+				player.getWorldPosition().x+TILE_SIZE*1, 
+				SCREEN_HEIGHT-player.getImage().getHeight(null)-TILE_SIZE*1);
 	}
 	
 	private void initJSettings() {
