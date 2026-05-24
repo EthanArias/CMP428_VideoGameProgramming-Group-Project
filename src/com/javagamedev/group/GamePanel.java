@@ -114,9 +114,8 @@ public class GamePanel extends JPanel {
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g); // fixed to singular method
 		Graphics2D g2 = (Graphics2D)g;
-		g2.setColor(Color.white);
-		g2.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 		g2.setColor(Color.black);
+		g2.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 		
 		// TILES
 		tileManager.draw(g2);
@@ -164,6 +163,10 @@ public class GamePanel extends JPanel {
 	
 	public CollisionChecker getCollisionChecker() {
 		return this.collisionChecker;
+	}
+	
+	public boolean inDebugMode() {
+		return debug;
 	}
 	
 }
