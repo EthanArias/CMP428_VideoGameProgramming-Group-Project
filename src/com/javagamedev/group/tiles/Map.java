@@ -2,6 +2,8 @@ package com.javagamedev.group.tiles;
 
 import java.awt.Graphics2D;
 
+import com.javagamedev.group.GamePanel;
+
 public class Map {
 
 	private Side[] sides = new Side[4];

@@ -1,6 +1,6 @@
 {
 	"tileSize":16,
-	"mapWidth":0,
+	"mapWidth":10,
 	"mapHeight":8,
 	"layers":[
 		{

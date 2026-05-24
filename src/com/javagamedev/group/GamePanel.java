@@ -82,8 +82,7 @@ public class GamePanel extends JPanel {
 			System.exit(0);
 		}
 		if(shift.isPressed()) {
-			System.out.println("TEST");
-			// Each shift rotates map to the right side
+			tileManager.shiftRight();
 		}
 		
 		updatePlayer((long)elapsedMS);

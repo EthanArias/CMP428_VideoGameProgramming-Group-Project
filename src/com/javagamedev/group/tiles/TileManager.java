@@ -21,6 +21,13 @@ public class TileManager {
 	
     private TileSet set;
     private Map map;
+    
+	public final int MIN_SIDE = 0;
+	protected int currentSide = MIN_SIDE;
+	public final int MAX_SIDE = 3;
+
+	// horizontal offset in pixels used when the side is narrower than the screen
+	private int currentSideOffsetX = 0;
 
     public TileManager(GamePanel gamePanel) {
     	this.gamePanel = gamePanel;
@@ -131,14 +138,55 @@ public class TileManager {
     }
 
     public void draw(Graphics2D g) {
-    	map.draw(g, 3);
+    	// Compute horizontal offset so the side is centered when narrower than the screen
+    	Side side = map.getSide(currentSide);
+    	if (side != null) {
+    		int sideTileWidth = side.getDimensions().width;
+    		int sidePixelWidth = sideTileWidth * GamePanel.TILE_SIZE;
+    		if (sidePixelWidth < GamePanel.SCREEN_WIDTH) {
+    			currentSideOffsetX = (GamePanel.SCREEN_WIDTH - sidePixelWidth) / 2;
+    		} else {
+    			currentSideOffsetX = 0;
+    		}
+    	} else {
+    		currentSideOffsetX = 0;
+    	}
+
+    	// Apply translation so drawing is centered. We translate the Graphics2D context
+    	if (currentSideOffsetX != 0) {
+    		g.translate(currentSideOffsetX, 0);
+    	}
+    	map.draw(g, currentSide);
+    	if (currentSideOffsetX != 0) {
+    		// revert translation
+    		g.translate(-currentSideOffsetX, 0);
+    	}
     }
     
     /**
-     * This is a temerary class that will be replaced for perspective shifting funcionality
+     * Returns the current horizontal draw offset (in pixels) applied when the current side
+     * is centered. This can be used by collision code to translate screen/world coordinates
+     * into the side's local tile coordinates.
      */
-    public Side getTempSide() {
-    	return map.getSide(3);
+    public int getCurrentSideOffsetX() {
+    	return currentSideOffsetX;
+    }
+    
+    public int getCurrentSideIndex() {
+    	return this.currentSide;
+    }
+    
+    public void shiftRight() {
+    	if(this.currentSide == this.MAX_SIDE) {
+    		this.currentSide = this.MIN_SIDE;
+    	}
+    	else {
+    		this.currentSide +=1;
+    	}
+    }
+    
+    public Side getCurrentSide() {
+    	return map.getSide(currentSide);
     }
     
 }
