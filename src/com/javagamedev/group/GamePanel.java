@@ -82,6 +82,7 @@ public class GamePanel extends JPanel {
 			System.exit(0);
 		}
 		if(shift.isPressed()) {
+			shiftPlayer();
 			tileManager.shiftRight();
 		}
 		
@@ -167,6 +168,23 @@ public class GamePanel extends JPanel {
 	
 	public boolean inDebugMode() {
 		return debug;
+	}
+	
+	/**
+	 * TODO: Fill out method during last phase of project
+	 */
+	private void shiftPlayer() {
+		int currentSide = tileManager.getCurrentSideIndex();
+		switch(currentSide) {
+		case 0:
+			break;
+		case 1:
+			break;
+		case 2:
+			break;
+		case 3:
+			break;
+		}
 	}
 	
 }
