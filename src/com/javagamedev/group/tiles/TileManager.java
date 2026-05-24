@@ -189,4 +189,40 @@ public class TileManager {
     	return map.getSide(currentSide);
     }
     
+    /**
+     * Draw a specific side with an additional horizontal pixel offset.
+     * xOffset is in pixels; positive moves the side right, negative moves it left.
+     */
+    public void drawSideAt(Graphics2D g, int sideIndex, int xOffset) {
+        Side side = map.getSide(sideIndex);
+        if (side == null) return;
+
+        int sideTileWidth = side.getDimensions().width;
+        int sidePixelWidth = sideTileWidth * GamePanel.TILE_SIZE;
+        int centeringOffset = 0;
+        if (sidePixelWidth < GamePanel.SCREEN_WIDTH) {
+            centeringOffset = (GamePanel.SCREEN_WIDTH - sidePixelWidth) / 2;
+        }
+
+        int totalOffset = centeringOffset + xOffset;
+        if (totalOffset != 0) {
+            g.translate(totalOffset, 0);
+            side.draw(g);
+            g.translate(-totalOffset, 0);
+        } else {
+            side.draw(g);
+        }
+    }
+
+    /**
+     * Shift the current side index one step to the left (wraps around).
+     */
+    public void shiftLeft() {
+        if (this.currentSide == this.MIN_SIDE) {
+            this.currentSide = this.MAX_SIDE;
+        } else {
+            this.currentSide -= 1;
+        }
+    }
+    
 }

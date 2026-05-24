@@ -9,6 +9,7 @@ import java.awt.event.KeyEvent;
 
 import javax.swing.JPanel;
 
+import com.javagamedev.graphics.SceneAnimation;
 import com.javagamedev.group.entity.Player;
 import com.javagamedev.group.tiles.TileManager;
 import com.javagamedev.input.GameAction;
@@ -31,12 +32,17 @@ public class GamePanel extends JPanel {
 	public final static Dimension SIZE = new Dimension (SCREEN_WIDTH, SCREEN_HEIGHT);
 	
 	// WORLD SETTINGS
-	public final static int MAX_WORLD_COL = 50;
-	public final static int MAX_WORLD_ROW = 50;
+	public final static int MAX_WORLD_COL = 20;
+	public final static int MAX_WORLD_ROW = 20;
 	public final static int WORLD_WIDTH = TILE_SIZE*MAX_SCREEN_COL;
 	public final static int WORLD_HEIGHT = TILE_SIZE*MAX_SCREEN_ROW;
 	
+	// GAME SETTINGS
 	public static final float GRAVITY = 0.005f;
+	
+	// SCENE ANIMATION
+	private SceneAnimation pause = new SceneAnimation(250);
+	private SceneAnimation shifting = new SceneAnimation(1000);
 	
 	// BACKGROUND / TILES
 	public final TileManager tileManager = new TileManager(this);
@@ -81,12 +87,33 @@ public class GamePanel extends JPanel {
 		if(escapeAction.isPressed()) {
 			System.exit(0);
 		}
-		if(shift.isPressed()) {
-			shiftPlayer();
-			tileManager.shiftRight();
-		}
 		
-		updatePlayer((long)elapsedMS);
+		if(!shifting.isActive()) {
+			if(shift.isPressed()) {
+				shifting.activate();
+				shiftPlayer();
+			}
+			updatePlayer((long)elapsedMS);
+		}
+		else if(shifting.isActive()) {
+			updateShiftAnimation((long)elapsedMS);
+		}
+	}
+	
+	private void updateShiftAnimation(long elapsedMS) {
+		if(pause.isActive()) {
+			pause.update(elapsedMS);
+		}
+		shifting.update(elapsedMS);
+	    if (pause.isActive()) {
+	        // waiting during pause
+	    } else if (!shifting.isDone()) {
+	        // animation in progress — rendering handles the visual
+	    } else {
+	        // animation finished: commit the side change and start pause
+	        tileManager.shiftLeft();
+	        pause.activate();
+	    }
 	}
 	
 	private void updatePlayer(long elapsedMS) {
@@ -112,6 +139,21 @@ public class GamePanel extends JPanel {
 		player.update(elapsedMS);
 	}
 	
+	private void drawShiftingAnimation(Graphics2D g2) {
+	    float p = shifting.getProgress(); // 0..1
+	    int shiftPx = (int) (p * GamePanel.SCREEN_WIDTH);
+
+	    int currentIndex = tileManager.getCurrentSideIndex();
+	    int nextIndex = (currentIndex == tileManager.MAX_SIDE) ? 
+	    		tileManager.MIN_SIDE : currentIndex + 1;
+
+	    // current side slides right
+	    tileManager.drawSideAt(g2, currentIndex, +shiftPx);
+
+	    // next side starts off-screen left at -SCREEN_WIDTH and moves right to 0
+	    tileManager.drawSideAt(g2, nextIndex, -GamePanel.SCREEN_WIDTH + shiftPx);
+	}
+	
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g); // fixed to singular method
 		Graphics2D g2 = (Graphics2D)g;
@@ -119,7 +161,12 @@ public class GamePanel extends JPanel {
 		g2.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 		
 		// TILES
-		tileManager.draw(g2);
+		if (shifting.isActive() && !shifting.isDone()) {
+			drawShiftingAnimation(g2);
+		}
+		else {
+			tileManager.draw(g2);
+		}
 		
 		// Entities
 		player.draw(g2);
@@ -170,9 +217,6 @@ public class GamePanel extends JPanel {
 		return debug;
 	}
 	
-	/**
-	 * TODO: Fill out method during last phase of project
-	 */
 	private void shiftPlayer() {
 		int currentSide = tileManager.getCurrentSideIndex();
 		switch(currentSide) {
