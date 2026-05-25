@@ -7,13 +7,18 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.event.KeyEvent;
 
+import javax.sound.sampled.AudioFormat;
 import javax.swing.JPanel;
 
 import com.javagamedev.graphics.SceneAnimation;
+import com.javagamedev.group.assets.Asset;
+import com.javagamedev.group.assets.AssetSetter;
 import com.javagamedev.group.entity.Player;
 import com.javagamedev.group.tiles.TileManager;
 import com.javagamedev.input.GameAction;
 import com.javagamedev.input.InputManager;
+import com.javagamedev.sound.Sound;
+import com.javagamedev.sound.SoundManager;
 
 public class GamePanel extends JPanel {
 	
@@ -37,6 +42,13 @@ public class GamePanel extends JPanel {
 	public final static int WORLD_WIDTH = TILE_SIZE*MAX_SCREEN_COL;
 	public final static int WORLD_HEIGHT = TILE_SIZE*MAX_SCREEN_ROW;
 	
+	// SOUND SETTINGS
+	// uncompressed, 44100Hz, 16-bit, mono, signed, little-endian
+	private static final AudioFormat PLAYBACK_FORMAT =
+		new AudioFormat(44100, 16, 1, true, false);
+	private SoundManager soundManager;
+	private Sound[] sounds = new Sound[10];
+	
 	// GAME SETTINGS
 	public static final float GRAVITY = 0.005f;
 	
@@ -50,6 +62,8 @@ public class GamePanel extends JPanel {
 	
 	// MIDDLE GROUND / PLAYER
 	private Player player = new Player(this);
+	private AssetSetter assetSetter = new AssetSetter(this);
+	private Asset[] assets = new Asset[10];
 	
 	// FOREGROUND / UI
 	
@@ -65,6 +79,11 @@ public class GamePanel extends JPanel {
 	public GamePanel() {
 		initJSettings();
 		createInput();
+		
+		soundManager = new SoundManager(PLAYBACK_FORMAT);
+		//sounds[0] = soundManager.getSound("res/sounds/bgm.wav");
+		//sounds[1] = soundManager.getSound("res/sounds/sfx1.wav");
+		//soundManager.play(sounds[0], null, true);
 		
 		this.player.setWorldPosition(
 				player.getWorldPosition().x+TILE_SIZE*1, 
@@ -228,6 +247,19 @@ public class GamePanel extends JPanel {
 			break;
 		case 3:
 			break;
+		}
+	}
+	
+	public Asset[] getAssets() {
+		return this.assets;
+	}
+	
+	public void playSFX(int index) {
+		if(index < 1 || index >= sounds.length) {
+			return;
+		}
+		else {
+			soundManager.play(sounds[index], null, false);
 		}
 	}
 	
