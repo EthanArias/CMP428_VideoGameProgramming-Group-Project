@@ -11,6 +11,8 @@ import javax.sound.sampled.AudioFormat;
 import javax.swing.JPanel;
 
 import com.javagamedev.graphics.SceneAnimation;
+import com.javagamedev.group.assets.Asset;
+import com.javagamedev.group.assets.AssetSetter;
 import com.javagamedev.group.entity.Player;
 import com.javagamedev.group.tiles.TileManager;
 import com.javagamedev.input.GameAction;
@@ -60,6 +62,8 @@ public class GamePanel extends JPanel {
 	
 	// MIDDLE GROUND / PLAYER
 	private Player player = new Player(this);
+	private AssetSetter assetSetter = new AssetSetter(this);
+	private Asset[] assets = new Asset[10];
 	
 	// FOREGROUND / UI
 	
@@ -244,6 +248,10 @@ public class GamePanel extends JPanel {
 		case 3:
 			break;
 		}
+	}
+	
+	public Asset[] getAssets() {
+		return this.assets;
 	}
 	
 	public void playSFX(int index) {
