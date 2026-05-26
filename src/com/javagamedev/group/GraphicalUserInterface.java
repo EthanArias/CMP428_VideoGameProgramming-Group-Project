@@ -39,8 +39,17 @@ public class GraphicalUserInterface {
 	}
 	
 	private void drawStart(Graphics2D g) {
-		// fill in
 		g.fillRect(0, 0, GamePanel.SCREEN_WIDTH, GamePanel.SCREEN_HEIGHT);
+		g.setFont(arial_30);
+		g.setColor(Color.white);
+		String text = "Press Enter to start";
+		int x = GamePanel.SCREEN_WIDTH/2 - g.getFontMetrics(g.getFont()).stringWidth(text)/2;
+		int y = GamePanel.SCREEN_HEIGHT/2 - g.getFontMetrics(g.getFont()).getHeight()/2;
+		g.setRenderingHint(
+			    RenderingHints.KEY_TEXT_ANTIALIASING, 
+			    RenderingHints.VALUE_TEXT_ANTIALIAS_ON
+			);
+		g.drawString(text, x, y);
 	}
 	
 	private void drawPlay(Graphics2D g) {
@@ -54,15 +63,27 @@ public class GraphicalUserInterface {
 			    RenderingHints.KEY_TEXT_ANTIALIASING, 
 			    RenderingHints.VALUE_TEXT_ANTIALIAS_ON
 			);
+		String text = "Get the key and leave";
+		int x = GamePanel.SCREEN_WIDTH/2 - g.getFontMetrics(g.getFont()).stringWidth(text)/2;
 		
-		g.drawString("ESCAPE", GamePanel.TILE_SIZE/2, 35);
+		g.drawString(text, x, 35);
 		
 		g.setFont(oldFont);
 		g.setColor(oldColor);
 	}
 	
 	private void drawEnd(Graphics2D g) {
-		
+		g.fillRect(0, 0, GamePanel.SCREEN_WIDTH, GamePanel.SCREEN_HEIGHT);
+		g.setFont(arial_60B);
+		g.setColor(Color.white);
+		String text = "YOU WIN";
+		int x = GamePanel.SCREEN_WIDTH/2 - g.getFontMetrics(g.getFont()).stringWidth(text)/2;
+		int y = GamePanel.SCREEN_HEIGHT/2 - g.getFontMetrics(g.getFont()).getHeight()/2;
+		g.setRenderingHint(
+			    RenderingHints.KEY_TEXT_ANTIALIASING, 
+			    RenderingHints.VALUE_TEXT_ANTIALIAS_ON
+			);
+		g.drawString(text, x, y);
 	}
 	
 }

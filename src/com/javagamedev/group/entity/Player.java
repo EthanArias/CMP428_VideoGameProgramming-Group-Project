@@ -7,6 +7,7 @@ import java.awt.image.BufferedImage;
 
 import com.javagamedev.graphics.Animation;
 import com.javagamedev.group.GamePanel;
+import com.javagamedev.group.GamePanel.GameState;
 import com.javagamedev.group.assets.Asset;
 
 public class Player extends Entity {
@@ -14,6 +15,7 @@ public class Player extends Entity {
 	private static final float JUMP_SPEED = -0.95f;
 	
 	private boolean onGround;
+	private boolean hasKey = false;
 	
     public Player(GamePanel gamePanel){
     	super(gamePanel);
@@ -161,8 +163,15 @@ public class Player extends Entity {
 			
 			String assetName = assets[index].getName();
 			switch(assetName) {
-				case "TestAsset":
-					System.out.println("TEST");
+				case "Key":
+					hasKey = true;
+					assets[index] = null;
+					break;
+				case "LockedDoor":
+					if(hasKey) {
+						gamePanel.setGameState(GameState.END_SCREEN);
+						assets[index] = null;
+					}
 					break;
 			}
 		}

@@ -390,4 +390,8 @@ public class GamePanel extends JPanel {
 		return gameState;
 	}
 	
+	public void setGameState(GameState gameState) {
+		this.gameState = gameState;
+	}
+	
 }
