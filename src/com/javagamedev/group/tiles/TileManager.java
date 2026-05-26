@@ -16,22 +16,30 @@ import com.javagamedev.group.GamePanel;
 import com.javagamedev.group.tiles.Tile.ImageTile;
 
 public class TileManager {
-	
-	private GamePanel gamePanel;
-	
+    
+    private GamePanel gamePanel;
+    
     private TileSet set;
     private Map map;
     
-	public final int MIN_SIDE = 0;
-	protected int currentSide = MIN_SIDE;
-	public final int MAX_SIDE = 3;
+    public final int MIN_SIDE = 0;
+    protected int currentSide = MIN_SIDE;
+    public final int MAX_SIDE = 3;
 
-	// horizontal offset in pixels used when the side is narrower than the screen
-	private int currentSideOffsetX = 0;
+    // horizontal offset in pixels used when the side is narrower than the screen
+    private int currentSideOffsetX = 0;
+
+    // --- shifting animation state ---
+    private boolean isShifting = false;
+    private int nextSideIndex = -1;
+    private float shiftProgress = 0f; // pixels moved
+    private float shiftDistance = 0f; // total pixels to move
+    private float shiftSpeed = 1.0f; // pixels per millisecond (tweak to taste)
+    private float shiftDirection = 1.0f; // sign multiplier for progress (handles left vs right)
 
     public TileManager(GamePanel gamePanel) {
-    	this.gamePanel = gamePanel;
-    	
+        this.gamePanel = gamePanel;
+        
         set = new TileSet("res/images/tilesets/spritesheet_test.png", 16, 48);
         this.map = new Map();
         this.map.setSide(readMapJSON("res/maps/map_side0.json"), 0);
@@ -137,58 +145,243 @@ public class TileManager {
         return -1;
     }
 
-    public void draw(Graphics2D g) {
-    	// Compute horizontal offset so the side is centered when narrower than the screen
-    	Side side = map.getSide(currentSide);
-    	if (side != null) {
-    		int sideTileWidth = side.getDimensions().width;
-    		int sidePixelWidth = sideTileWidth * GamePanel.TILE_SIZE;
-    		if (sidePixelWidth < GamePanel.SCREEN_WIDTH) {
-    			currentSideOffsetX = (GamePanel.SCREEN_WIDTH - sidePixelWidth) / 2;
-    		} else {
-    			currentSideOffsetX = 0;
-    		}
-    	} else {
-    		currentSideOffsetX = 0;
-    	}
-
-    	// Apply translation so drawing is centered. We translate the Graphics2D context
-    	if (currentSideOffsetX != 0) {
-    		g.translate(currentSideOffsetX, 0);
-    	}
-    	map.draw(g, currentSide);
-    	if (currentSideOffsetX != 0) {
-    		// revert translation
-    		g.translate(-currentSideOffsetX, 0);
-    	}
+    /**
+     * Update must be called each frame to advance the shifting animation.
+     */
+    public void update(long elapsedms) {
+        if (!isShifting) return;
+        // advance progress in the correct direction
+        shiftProgress += elapsedms * shiftSpeed * shiftDirection;
+        // clamp/finish
+        if (Math.abs(shiftProgress) >= Math.abs(shiftDistance)) {
+            // clamp to exact distance to avoid visual overshoot
+            shiftProgress = shiftDistance;
+            // finalize shift: make the next side the current
+            this.currentSide = this.nextSideIndex;
+            this.isShifting = false;
+            // reset transient shift state
+            this.shiftProgress = 0f;
+            this.shiftDistance = 0f;
+            this.nextSideIndex = -1;
+            this.shiftDirection = 1.0f;
+        }
     }
-    
+
+    public void draw(Graphics2D g) {
+        // When not shifting, draw the current side centered like before
+        if (!isShifting) {
+            Side side = map.getSide(currentSide);
+            if (side != null) {
+                int sideTileWidth = side.getDimensions().width;
+                int sidePixelWidth = sideTileWidth * GamePanel.TILE_SIZE;
+                if (sidePixelWidth < GamePanel.SCREEN_WIDTH) {
+                    currentSideOffsetX = (GamePanel.SCREEN_WIDTH - sidePixelWidth) / 2;
+                } else {
+                    currentSideOffsetX = 0;
+                }
+            } else {
+                currentSideOffsetX = 0;
+            }
+
+            if (currentSideOffsetX != 0) {
+                g.translate(currentSideOffsetX, 0);
+            }
+            map.draw(g, currentSide);
+            if (currentSideOffsetX != 0) {
+                g.translate(-currentSideOffsetX, 0);
+            }
+            return;
+        }
+
+        // --- shifting: draw both current and next sides at animated positions ---
+        Side current = map.getSide(currentSide);
+        Side next = map.getSide(nextSideIndex);
+        if (current == null || next == null) {
+            // fallback: draw only current
+            map.draw(g, currentSide);
+            return;
+        }
+
+        // compute centered offsets for both sides
+        int currTileW = current.getDimensions().width;
+        int nextTileW = next.getDimensions().width;
+        int currPixelW = currTileW * GamePanel.TILE_SIZE;
+        int nextPixelW = nextTileW * GamePanel.TILE_SIZE;
+
+        int currCenterOffset = (currPixelW < GamePanel.SCREEN_WIDTH) ? 
+        		(GamePanel.SCREEN_WIDTH - currPixelW) / 2 : 0;
+        int nextCenterOffset = (nextPixelW < GamePanel.SCREEN_WIDTH) ? 
+        		(GamePanel.SCREEN_WIDTH - nextPixelW) / 2 : 0;
+
+        // initial positions when shift begins (next is placed directly left of current or 
+        // right for left shift)
+        // we'll treat shiftDistance sign to indicate direction (positive -> move right)
+        float currStartX = currCenterOffset;
+        float nextStartX;
+        // determine whether we're shifting to the right 
+        // (bringing next from left to center) or to the left
+        boolean bringingFromLeft = (shiftDistance > 0);
+        if (bringingFromLeft) {
+            // place next so its rightmost column aligns with current's leftmost column + 1 tile
+            nextStartX = currStartX - nextPixelW + GamePanel.TILE_SIZE;
+        } else {
+            // bringing from right: place next so its leftmost column aligns 
+        	// with current's rightmost column - 1 tile
+            nextStartX = currStartX + currPixelW - GamePanel.TILE_SIZE;
+        }
+
+        // current and next positions during the animation
+        float currX = currStartX + shiftProgress;
+        float nextX = nextStartX + shiftProgress;
+
+        // Draw next first then current so current appears above if overlapping
+        // Use translate for each draw: translate to drawX and call side.draw(g)
+        // We calculate relative offsets from each side's centering offset and reuse drawSideAt
+
+        // draw next
+        int nextAdditionalOffset = Math.round(nextX - nextCenterOffset);
+        drawSideAt(g, nextSideIndex, nextAdditionalOffset);
+
+        // draw current
+        int currAdditionalOffset = Math.round(currX - currCenterOffset);
+        drawSideAt(g, currentSide, currAdditionalOffset);
+    }
+
     /**
      * Returns the current horizontal draw offset (in pixels) applied when the current side
      * is centered. This can be used by collision code to translate screen/world coordinates
-     * into the side's local tile coordinates.
+     * into the side's local tile coordinates. During a shift this returns the current
+     * animated draw offset for the current side.
      */
     public int getCurrentSideOffsetX() {
-    	return currentSideOffsetX;
+        if (!isShifting) return currentSideOffsetX;
+        // when shifting, compute based on current start + progress
+        Side current = map.getSide(currentSide);
+        if (current == null) return 0;
+        int currPixelW = current.getDimensions().width * GamePanel.TILE_SIZE;
+        int currCenterOffset = (currPixelW < GamePanel.SCREEN_WIDTH) ? 
+        		(GamePanel.SCREEN_WIDTH - currPixelW) / 2 : 0;
+        float currStartX = currCenterOffset;
+        return Math.round(currStartX + shiftProgress);
     }
-    
+
+    /**
+     * Returns the animated draw offset (in pixels) for a given side index.
+     * This takes shifting into account; for non-shifting states it's the same as
+     * the centered offset for that side.
+     */
+    public int getSideDrawOffsetX(int sideIndex) {
+        if (!isShifting) {
+            Side side = map.getSide(sideIndex);
+            if (side == null) return 0;
+            int pixelW = side.getDimensions().width * GamePanel.TILE_SIZE;
+            return (pixelW < GamePanel.SCREEN_WIDTH) ? 
+            		(GamePanel.SCREEN_WIDTH - pixelW) / 2 : 0;
+        }
+        // if shifting, compute for current or next side
+        Side current = map.getSide(currentSide);
+        Side next = map.getSide(nextSideIndex);
+        if (sideIndex == currentSide && current != null) {
+            int currPixelW = current.getDimensions().width * GamePanel.TILE_SIZE;
+            int currCenterOffset = (currPixelW < GamePanel.SCREEN_WIDTH) ? 
+            		(GamePanel.SCREEN_WIDTH - currPixelW) / 2 : 0;
+            float currStartX = currCenterOffset;
+            return Math.round(currStartX + shiftProgress);
+        }
+        if (sideIndex == nextSideIndex && next != null) {
+            int currPixelW = current.getDimensions().width * GamePanel.TILE_SIZE;
+            int nextPixelW = next.getDimensions().width * GamePanel.TILE_SIZE;
+            int currCenterOffset = (currPixelW < GamePanel.SCREEN_WIDTH) ? 
+            		(GamePanel.SCREEN_WIDTH - currPixelW) / 2 : 0;
+            float nextStartX = (shiftDistance > 0) ? 
+            		(currCenterOffset - nextPixelW) : (currCenterOffset + currPixelW);
+            return Math.round(nextStartX + shiftProgress);
+        }
+        // otherwise return centered offset
+        Side side = map.getSide(sideIndex);
+        if (side == null) return 0;
+        int pixelW = side.getDimensions().width * GamePanel.TILE_SIZE;
+        return (pixelW < GamePanel.SCREEN_WIDTH) ? (GamePanel.SCREEN_WIDTH - pixelW) / 2 : 0;
+    }
+
     public int getCurrentSideIndex() {
-    	return this.currentSide;
+        return this.currentSide;
     }
-    
+
+    /**
+     * Initiate a shift to the right: bring the next side (index+1) from the left to center.
+     * If a shift is already in progress this call is ignored.
+     */
     public void shiftRight() {
-    	if(this.currentSide == this.MAX_SIDE) {
-    		this.currentSide = this.MIN_SIDE;
-    	}
-    	else {
-    		this.currentSide +=1;
-    	}
+        if (isShifting) return;
+        int candidate = (this.currentSide == this.MAX_SIDE) ? 
+        		this.MIN_SIDE : this.currentSide + 1;
+        startShiftTo(candidate, true);
     }
-    
+
+    /**
+     * Initiate a shift to the left: bring the previous side (index-1) from the right to center.
+     */
+    public void shiftLeft() {
+        if (isShifting) return;
+        int candidate = (this.currentSide == this.MIN_SIDE) ? 
+        		this.MAX_SIDE : this.currentSide - 1;
+        startShiftTo(candidate, false);
+    }
+
+    private void startShiftTo(int candidateIndex, boolean bringFromLeft) {
+        Side current = map.getSide(currentSide);
+        Side next = map.getSide(candidateIndex);
+        if (current == null || next == null) {
+            // fallback to instant change
+            this.currentSide = candidateIndex;
+            return;
+        }
+
+        this.nextSideIndex = candidateIndex;
+        this.isShifting = true;
+        this.shiftProgress = 0f;
+
+        int currPixelW = current.getDimensions().width * GamePanel.TILE_SIZE;
+        int nextPixelW = next.getDimensions().width * GamePanel.TILE_SIZE;
+
+        int currCenterOffset = (currPixelW < GamePanel.SCREEN_WIDTH) ? 
+        		(GamePanel.SCREEN_WIDTH - currPixelW) / 2 : 0;
+        int nextCenterOffset = (nextPixelW < GamePanel.SCREEN_WIDTH) ? 
+        		(GamePanel.SCREEN_WIDTH - nextPixelW) / 2 : 0;
+
+        // compute starting next X relative to centering
+        float nextStartX = bringFromLeft ? (currCenterOffset - nextPixelW) : 
+        	(currCenterOffset + currPixelW);
+        // goal is nextCenterOffset
+        this.shiftDistance = nextCenterOffset - nextStartX;
+        // store direction sign so update() moves progress the right way
+        this.shiftDirection = Math.signum(this.shiftDistance);
+    }
+
     public Side getCurrentSide() {
-    	return map.getSide(currentSide);
+        return map.getSide(currentSide);
     }
-    
+
+    // Expose shifting state to other systems (e.g., GamePanel) 
+    // so they can freeze entities while shifting.
+    public boolean isShifting() {
+        return isShifting;
+    }
+
+    public int getNextSideIndex() {
+        return nextSideIndex;
+    }
+
+    /**
+     * Return the tile width (in tiles) of the given side index, or 0 if missing.
+     */
+    public int getSideTileWidth(int sideIndex) {
+        Side side = map.getSide(sideIndex);
+        if (side == null) return 0;
+        return side.getDimensions().width;
+    }
+
     /**
      * Draw a specific side with an additional horizontal pixel offset.
      * xOffset is in pixels; positive moves the side right, negative moves it left.
@@ -214,15 +407,4 @@ public class TileManager {
         }
     }
 
-    /**
-     * Shift the current side index one step to the left (wraps around).
-     */
-    public void shiftLeft() {
-        if (this.currentSide == this.MIN_SIDE) {
-            this.currentSide = this.MAX_SIDE;
-        } else {
-            this.currentSide -= 1;
-        }
-    }
-    
 }

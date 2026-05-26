@@ -174,6 +174,28 @@ public class Player extends Entity {
 		}
 	}
 
+    /**
+     * Draw the player at an explicit position (in pixels).
+     * Used during side shifting to render the paused player at positions on both sides.
+     */
+    public void drawAt(Graphics2D g, float x, float y) {
+        if (this.facing == FacingState.LEFT) {
+            g.drawImage(
+                    this.anim.getImage(),
+                    Math.round(x) + anim.getImage().getWidth(gamePanel),
+                    Math.round(y),
+                    -this.anim.getImage().getWidth(gamePanel),
+                    this.anim.getImage().getHeight(gamePanel),
+                    gamePanel);
+        } else {
+            g.drawImage(
+                    this.anim.getImage(),
+                    Math.round(x),
+                    Math.round(y),
+                    gamePanel);
+        }
+    }
+
 	/**
 	    Updates this Sprite's Animation and its position based
 	    on the velocity.
