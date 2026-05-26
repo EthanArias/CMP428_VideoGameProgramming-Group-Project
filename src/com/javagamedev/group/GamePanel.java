@@ -282,8 +282,8 @@ public class GamePanel extends JPanel {
 		tileManager.draw(g2);
 
 		// Entities
-		drawEntities(g2);
 		drawAssets(g2);
+		drawEntities(g2);
 		
 		// UI
 		gui.draw(g2);

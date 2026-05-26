@@ -3,16 +3,16 @@ package com.javagamedev.group.assets;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
 
-public class TestAsset extends Asset {
+public class KeyAsset extends Asset {
 
-	public TestAsset() {
+	public KeyAsset() {
 		BufferedImage img = com.javagamedev.utility.GeneralUtility.loadImage(
-				"res/images/tiles/testAsset.png");
+				"res/images/tiles/Key.png");
 		super(
-				"TestAsset", 
+				"LockedDoor", 
 				(BufferedImage) 
 				com.javagamedev.utility.GeneralUtility.scaleImage(img, 48, 48), 
-				true, 
+				false, 
 				new Point(),
 				0);
 	}
