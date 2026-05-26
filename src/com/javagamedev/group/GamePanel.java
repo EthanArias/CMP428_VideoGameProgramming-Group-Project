@@ -24,6 +24,10 @@ public class GamePanel extends JPanel {
 	private static final long serialVersionUID = 1L;
 	private boolean debug = false;
 	
+	// GAME STATE
+	public enum GameState { START_SCREEN, PLAYING, END_SCREEN};
+	private GameState gameState;
+	
 	// SCREEN SETTINGS
 	private final static int originalTileSize = 16; // 16x16 tile
 	private final static int scale = 3;
@@ -71,7 +75,8 @@ public class GamePanel extends JPanel {
     private boolean wasShifting = false;
 	
 	// FOREGROUND / UI
-	
+	private GraphicalUserInterface gui = new GraphicalUserInterface(this);
+    
 	// INPUT
 	private GameAction jump;
 	private GameAction left;
@@ -79,11 +84,13 @@ public class GamePanel extends JPanel {
 	private GameAction shift;
 	private GameAction debugAction;
 	private GameAction escapeAction;
+	private GameAction enterAction;
 	public final  InputManager inputManager = new InputManager(this);
 	
 	public GamePanel() {
 		initJSettings();
 		createInput();
+		gameState = GameState.START_SCREEN;
 		
 		soundManager = new SoundManager(PLAYBACK_FORMAT);
 		//sounds[0] = soundManager.getSound("res/sounds/bgm.wav");
@@ -93,6 +100,8 @@ public class GamePanel extends JPanel {
 		this.player.setWorldPosition(
 				player.getWorldPosition().x+TILE_SIZE*1, 
 				SCREEN_HEIGHT-player.getImage().getHeight(null)-TILE_SIZE*1);
+		
+		assetSetter.setObject(assets);
 	}
 	
 	private void initJSettings() {
@@ -111,10 +120,31 @@ public class GamePanel extends JPanel {
 		if(escapeAction.isPressed()) {
 			System.exit(0);
 		}
+		
+		switch(gameState) {
+			case START_SCREEN:
+				updateOnStart(elapsedMS);
+				break;
+			case PLAYING:
+				updateOnPlaying(elapsedMS);
+				break;
+			case END_SCREEN:
+				updateOnEnd(elapsedMS);
+				break;
+		}
+		
+	}
+
+	private void updateOnStart(double elapsedMS) {
+		if(enterAction.isPressed()) {
+			gameState = GameState.PLAYING;
+		}
+	}
+	
+	private void updateOnPlaying(double elapsedMS) {
 		if(shift.isPressed()) {
 			tileManager.shiftRight();
 		}
-
 		// advance tile manager animations (e.g., side shifting)
 		tileManager.update((long)elapsedMS);
 
@@ -171,13 +201,17 @@ public class GamePanel extends JPanel {
 
 		wasShifting = tileManager.isShifting();
 	}
-
+	
+	private void updateOnEnd(double elapsedMS) {
+		
+	}
+	
 	/**
 	 * Hook called when a side shift finishes to determine the player's new world position
-	 * on the destination side. Default implementation preserves the prior behavior
-	 * (maps the captured local X on the next side into panel coordinates using the
-	 * destination side's draw offset and preserves Y). Override or edit this method
-	 * to implement custom mapping logic (percentage-based, ground snap, etc.).
+	 * on the destination side. This implementation preserves the player's relative position
+	 * across sides using percentage mapping, updates the player's position3D appropriately,
+	 * and handles different side widths. This gives a predictable mapping between 2D planes
+	 * representing the imaginary 3D position.
 	 *
 	 * @param fromSide index of the side we shifted from
 	 * @param toSide index of the side we shifted to (now current)
@@ -188,24 +222,48 @@ public class GamePanel extends JPanel {
 	 */
 	public Point.Float resolvePlayerPositionAfterShift(int fromSide, int toSide,
 							float frozenLocalCurrentX, float frozenLocalNextX, float frozenY) {
-		// Default: use frozenLocalNextX plus the destination side's draw offset
+		// map the player's relative horizontal position across differing side widths
+		int fromTiles = Math.max(1, tileManager.getSideTileWidth(fromSide));
+		int toTiles = Math.max(1, tileManager.getSideTileWidth(toSide));
+		float fromPx = fromTiles * (float)GamePanel.TILE_SIZE;
+		float toPx = toTiles * (float)GamePanel.TILE_SIZE;
+
+		// compute percentage across source side using the captured local X
+		float pct = 0f;
+		if (fromPx > 0f) {
+			pct = frozenLocalCurrentX / fromPx;
+		}
+		if (pct < 0f) pct = 0f;
+		if (pct > 1f) pct = 1f;
+
+		// destination local X (pixels) by preserving percentage
+		float destLocalX = pct * toPx;
+
+		// allow the previously computed frozenLocalNextX to override if it looks valid
+		if (frozenLocalNextX > 0f) {
+			// small sanity clamp: if frozenLocalNextX is within [0, toPx), prefer it
+			if (frozenLocalNextX >= 0f && frozenLocalNextX < toPx) {
+				destLocalX = frozenLocalNextX;
+			}
+		}
+
 		int destOffset = tileManager.getSideDrawOffsetX(toSide);
-		float newWorldX = GamePanel.TILE_SIZE + destOffset;
-		
-		if(fromSide==0) {
-			// TODO: fill in
+		float newWorldX = destLocalX + destOffset;
+		float newWorldY = frozenY; // keep same vertical screen position by default
+
+		// Update the player's stored 3D coordinate so future shifts can use it.
+		// Convention used across the project:
+		//  - sides 0 and 3 track a 3D X coordinate (position3D.x)
+		//  - sides 1 and 2 track a 3D Y coordinate (position3D.y)
+		if (toSide == 0 || toSide == 3) {
+			// set 3D X from the computed world X (local to panel)
+			player.position3D.x = newWorldX - destOffset; // store as local-to-side pixels
+		} else {
+			// toSide is 1 or 2 -> store Y in 3D
+			player.position3D.y = newWorldY; // Y is already in panel pixels
 		}
-		else if(fromSide==1) {
-			// TODO: fill in
-		}
-		else if(fromSide==2) {
-			// TODO: fill in
-		}
-		else if(fromSide==3) {
-			// TODO: fill in
-		}
-		
-		return new Point.Float(newWorldX, frozenY);
+
+		return new java.awt.Point.Float(newWorldX, newWorldY);
 	}
 	
 	private void updatePlayer(long elapsedMS) {
@@ -248,6 +306,16 @@ public class GamePanel extends JPanel {
 		tileManager.draw(g2);
 
 		// Entities
+		drawAssets(g2);
+		drawEntities(g2);
+		
+		// UI
+		gui.draw(g2);
+		
+		g2.dispose();
+	}
+	
+	private void drawEntities(Graphics2D g2) {
 		if (tileManager.isShifting() && shiftCaptureDone) {
 			// draw player at both current and next side positions using captured local pixels
 			int currOffsetNow = tileManager.getSideDrawOffsetX(frozenCurrentSide);
@@ -260,10 +328,32 @@ public class GamePanel extends JPanel {
 		} else {
 			player.draw(g2);
 		}
-		
-		// UI
-		
-		g2.dispose();
+	}
+	
+	private void drawAssets(Graphics2D g2) {
+		if (assets == null) return;
+		int currentSideIndex = tileManager.getCurrentSideIndex();
+		boolean shifting = tileManager.isShifting();
+		int nextSideIndex = shifting ? tileManager.getNextSideIndex() : -1;
+		for (int i = 0; i < assets.length; i++) {
+			Asset asset = assets[i];
+			if (asset == null) continue;
+			int assetSide = asset.getSide();
+			// Only draw assets for the currently visible side(s)
+			if (assetSide != currentSideIndex && !(shifting && assetSide == nextSideIndex)) {
+				continue;
+			}
+			// animated offset for the side the asset belongs to (handles shifts)
+			int offset = tileManager.getSideDrawOffsetX(assetSide);
+			if (offset != 0) {
+				g2.translate(offset, 0);
+			}
+			// pass the asset's side so Asset.draw's side check succeeds
+			asset.draw(g2, assetSide);
+			if (offset != 0) {
+				g2.translate(-offset, 0);
+			}
+		}
 	}
 	
 	public Point pixelsToTiles(Point.Float pixels) {
@@ -280,6 +370,7 @@ public class GamePanel extends JPanel {
 		this.shift = new GameAction("shift", GameAction.DETECT_INITAL_PRESS_ONLY);
 		this.debugAction = new GameAction("debug", GameAction.DETECT_INITAL_PRESS_ONLY);
 		this.escapeAction = new GameAction("exit", GameAction.DETECT_INITAL_PRESS_ONLY);
+		this.enterAction = new GameAction("enter", GameAction.DETECT_INITAL_PRESS_ONLY);
 		
 		inputManager.mapToKey(jump, KeyEvent.VK_SPACE);
 		inputManager.mapToKey(left, KeyEvent.VK_A);
@@ -293,6 +384,7 @@ public class GamePanel extends JPanel {
 		
 		inputManager.mapToKey(debugAction, KeyEvent.VK_Q);
 		inputManager.mapToKey(escapeAction, KeyEvent.VK_ESCAPE);
+		inputManager.mapToKey(enterAction, KeyEvent.VK_ENTER);
 	}
 	
 	public TileManager getTileManager() {
@@ -318,6 +410,14 @@ public class GamePanel extends JPanel {
 		else {
 			soundManager.play(sounds[index], null, false);
 		}
+	}
+	
+	public GameState getCurrentGameState() {
+		return gameState;
+	}
+	
+	public void setGameState(GameState gameState) {
+		this.gameState = gameState;
 	}
 	
 }

@@ -3,7 +3,9 @@ package com.javagamedev.group;
 import java.awt.Point;
 import java.awt.Rectangle;
 
+import com.javagamedev.group.assets.Asset;
 import com.javagamedev.group.entity.Entity;
+import com.javagamedev.group.entity.Player;
 import com.javagamedev.group.tiles.Side;
 
 public class CollisionChecker {
@@ -18,8 +20,8 @@ public class CollisionChecker {
      * Sets entity.setCollision(true) if any overlapped tile is collideable.
      */
     public void checkTile(Entity entity) {
-    	if (entity == null) return;
-	    
+     if (entity == null) return;
+    	
     	Side tileMap = this.gamePanel.getTileManager().getCurrentSide();
         if (tileMap == null) {
         	return;
@@ -60,6 +62,59 @@ public class CollisionChecker {
 				entity.collideVertical();
 			}
         }
+    }
+    
+    public int checkAsset(Entity entity) {
+    	int index = -1;
+    	
+    	Asset[] assets = this.gamePanel.getAssets();
+    	if (assets == null) return -1;
+    	
+    	// current side and its draw offset (panel-space)
+    	int currentSide = this.gamePanel.getTileManager().getCurrentSideIndex();
+    	int sideOffset = this.gamePanel.getTileManager().getSideDrawOffsetX(currentSide);
+    	Side tileMap = this.gamePanel.getTileManager().getCurrentSide();
+    	
+    	for(int i=0; i<assets.length; i++) {
+    		if(assets[i] != null) {
+    			// skip assets that belong to other sides
+    			if (assets[i].getSide() != currentSide) continue;
+    			
+    			// entity's predicted panel-space solid area rect (include velocity)
+    			Rectangle entityBox = new Rectangle(
+    					(int)Math.floor(entity.getWorldPosition().x + entity.getVelocity().x) + entity.getHitBox().x,
+    					(int)Math.floor(entity.getWorldPosition().y + entity.getVelocity().y) + entity.getHitBox().y,
+    					entity.getHitBox().width,
+    					entity.getHitBox().height);
+    			
+    			// asset panel-space position (asset position is stored in side-local pixels)
+    			int assetPanelX = assets[i].getPosition().x + sideOffset;
+    			int assetPanelY = assets[i].getPosition().y;
+    			int assetW = (assets[i].getImage() != null) ? assets[i].getImage().getWidth() : assets[i].getBounds().width;
+    			int assetH = (assets[i].getImage() != null) ? assets[i].getImage().getHeight() : assets[i].getBounds().height;
+    			
+    			Rectangle assetBox = new Rectangle(assetPanelX, assetPanelY, assetW, assetH);
+    			
+    			if(entityBox.intersects(assetBox)) {
+    				if(assets[i].hasCollision()) {
+    					// Resolve collision against the asset itself by inspecting the intersection
+    					Rectangle inter = entityBox.intersection(assetBox);
+    					if (inter.width < inter.height) {
+    						// Horizontal penetration is smaller -> horizontal collision
+    						entity.collideHorizontal();
+    					} else {
+    						// Vertical penetration is smaller or equal -> vertical collision
+    						entity.collideVertical();
+    					}
+    				}
+    				if(entity instanceof Player) {
+    		    		index = i;
+    		    	}
+    			}
+    		}
+    	}
+    	
+    	return index;
     }
     
 }
