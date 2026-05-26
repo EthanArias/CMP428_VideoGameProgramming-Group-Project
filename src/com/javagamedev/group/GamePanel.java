@@ -208,10 +208,10 @@ public class GamePanel extends JPanel {
 	
 	/**
 	 * Hook called when a side shift finishes to determine the player's new world position
-	 * on the destination side. Default implementation preserves the prior behavior
-	 * (maps the captured local X on the next side into panel coordinates using the
-	 * destination side's draw offset and preserves Y). Override or edit this method
-	 * to implement custom mapping logic (percentage-based, ground snap, etc.).
+	 * on the destination side. This implementation preserves the player's relative position
+	 * across sides using percentage mapping, updates the player's position3D appropriately,
+	 * and handles different side widths. This gives a predictable mapping between 2D planes
+	 * representing the imaginary 3D position.
 	 *
 	 * @param fromSide index of the side we shifted from
 	 * @param toSide index of the side we shifted to (now current)
@@ -222,24 +222,48 @@ public class GamePanel extends JPanel {
 	 */
 	public Point.Float resolvePlayerPositionAfterShift(int fromSide, int toSide,
 							float frozenLocalCurrentX, float frozenLocalNextX, float frozenY) {
-		// Default: use frozenLocalNextX plus the destination side's draw offset
+		// map the player's relative horizontal position across differing side widths
+		int fromTiles = Math.max(1, tileManager.getSideTileWidth(fromSide));
+		int toTiles = Math.max(1, tileManager.getSideTileWidth(toSide));
+		float fromPx = fromTiles * (float)GamePanel.TILE_SIZE;
+		float toPx = toTiles * (float)GamePanel.TILE_SIZE;
+
+		// compute percentage across source side using the captured local X
+		float pct = 0f;
+		if (fromPx > 0f) {
+			pct = frozenLocalCurrentX / fromPx;
+		}
+		if (pct < 0f) pct = 0f;
+		if (pct > 1f) pct = 1f;
+
+		// destination local X (pixels) by preserving percentage
+		float destLocalX = pct * toPx;
+
+		// allow the previously computed frozenLocalNextX to override if it looks valid
+		if (frozenLocalNextX > 0f) {
+			// small sanity clamp: if frozenLocalNextX is within [0, toPx), prefer it
+			if (frozenLocalNextX >= 0f && frozenLocalNextX < toPx) {
+				destLocalX = frozenLocalNextX;
+			}
+		}
+
 		int destOffset = tileManager.getSideDrawOffsetX(toSide);
-		float newWorldX = GamePanel.TILE_SIZE + destOffset;
-		
-		if(fromSide==0) {
-			// TODO: fill in
+		float newWorldX = destLocalX + destOffset;
+		float newWorldY = frozenY; // keep same vertical screen position by default
+
+		// Update the player's stored 3D coordinate so future shifts can use it.
+		// Convention used across the project:
+		//  - sides 0 and 3 track a 3D X coordinate (position3D.x)
+		//  - sides 1 and 2 track a 3D Y coordinate (position3D.y)
+		if (toSide == 0 || toSide == 3) {
+			// set 3D X from the computed world X (local to panel)
+			player.position3D.x = newWorldX - destOffset; // store as local-to-side pixels
+		} else {
+			// toSide is 1 or 2 -> store Y in 3D
+			player.position3D.y = newWorldY; // Y is already in panel pixels
 		}
-		else if(fromSide==1) {
-			// TODO: fill in
-		}
-		else if(fromSide==2) {
-			// TODO: fill in
-		}
-		else if(fromSide==3) {
-			// TODO: fill in
-		}
-		
-		return new Point.Float(newWorldX, frozenY);
+
+		return new java.awt.Point.Float(newWorldX, newWorldY);
 	}
 	
 	private void updatePlayer(long elapsedMS) {
@@ -316,7 +340,9 @@ public class GamePanel extends JPanel {
 			if (asset == null) continue;
 			int assetSide = asset.getSide();
 			// Only draw assets for the currently visible side(s)
-			if (assetSide != currentSideIndex && !(shifting && assetSide == nextSideIndex)) continue;
+			if (assetSide != currentSideIndex && !(shifting && assetSide == nextSideIndex)) {
+				continue;
+			}
 			// animated offset for the side the asset belongs to (handles shifts)
 			int offset = tileManager.getSideDrawOffsetX(assetSide);
 			if (offset != 0) {
