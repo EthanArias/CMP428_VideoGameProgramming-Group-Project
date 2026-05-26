@@ -10,7 +10,6 @@ import java.awt.event.KeyEvent;
 import javax.sound.sampled.AudioFormat;
 import javax.swing.JPanel;
 
-import com.javagamedev.graphics.SceneAnimation;
 import com.javagamedev.group.assets.Asset;
 import com.javagamedev.group.assets.AssetSetter;
 import com.javagamedev.group.entity.Player;
@@ -52,10 +51,6 @@ public class GamePanel extends JPanel {
 	// GAME SETTINGS
 	public static final float GRAVITY = 0.005f;
 	
-	// SCENE ANIMATION
-	private SceneAnimation pause = new SceneAnimation(250);
-	private SceneAnimation shifting = new SceneAnimation(1000);
-	
 	// BACKGROUND / TILES
 	public final TileManager tileManager = new TileManager(this);
 	public final  CollisionChecker collisionChecker = new CollisionChecker(this);
@@ -64,6 +59,16 @@ public class GamePanel extends JPanel {
 	private Player player = new Player(this);
 	private AssetSetter assetSetter = new AssetSetter(this);
 	private Asset[] assets = new Asset[10];
+
+    // Shift capture state: when a side shift starts we capture the player's local
+    // pixel position on the current side and the corresponding local pixel on the next side.
+    private boolean shiftCaptureDone = false;
+    private float frozenLocalCurrentX = 0f;
+    private float frozenLocalNextX = 0f;
+    private float frozenY = 0f;
+    private int frozenCurrentSide = -1;
+    private int frozenNextSide = -1;
+    private boolean wasShifting = false;
 	
 	// FOREGROUND / UI
 	
@@ -109,27 +114,58 @@ public class GamePanel extends JPanel {
 		if(shift.isPressed()) {
 			tileManager.shiftRight();
 		}
-		
+
 		// advance tile manager animations (e.g., side shifting)
 		tileManager.update((long)elapsedMS);
-		
-		updatePlayer((long)elapsedMS);
-	}
-	
-	private void updateShiftAnimation(long elapsedMS) {
-		if(pause.isActive()) {
-			pause.update(elapsedMS);
+
+		// handle shift start/end capture
+		boolean nowShifting = tileManager.isShifting();
+		if (nowShifting && !wasShifting) {
+			// shift just started: capture player positions
+			frozenCurrentSide = tileManager.getCurrentSideIndex();
+			frozenNextSide = tileManager.getNextSideIndex();
+			// current side draw offset at capture
+			int currOffset = tileManager.getSideDrawOffsetX(frozenCurrentSide);
+			int nextOffset = tileManager.getSideDrawOffsetX(frozenNextSide);
+			// player's absolute panel position
+			float playerPanelX = player.getWorldPosition().x;
+			// local pixel within current side
+			frozenLocalCurrentX = playerPanelX - currOffset;
+			// compute fractional tile and map to next side tile index
+			float tileIndexF = (float)Math.floor(frozenLocalCurrentX / TILE_SIZE);
+			float frac = frozenLocalCurrentX - tileIndexF * TILE_SIZE;
+			// clamp tileIndex to next side width
+			int nextTileWidth = tileManager.getSideTileWidth(frozenNextSide);
+			int tileIndex = (int)tileIndexF;
+			if (tileIndex < 0) tileIndex = 0;
+			if (tileIndex >= nextTileWidth) tileIndex = Math.max(0, nextTileWidth - 1);
+			frozenLocalNextX = tileIndex * TILE_SIZE + frac;
+			// store vertical
+			frozenY = player.getWorldPosition().y;
+			shiftCaptureDone = true;
 		}
-		shifting.update(elapsedMS);
-	    if (pause.isActive()) {
-	        // waiting during pause
-	    } else if (!shifting.isDone()) {
-	        // animation in progress — rendering handles the visual
-	    } else {
-	        // animation finished: commit the side change and start pause
-	        tileManager.shiftLeft();
-	        pause.activate();
-	    }
+
+		// If shifting, do not update player physics; otherwise update normally
+		if (!tileManager.isShifting()) {
+			updatePlayer((long)elapsedMS);
+		} else {
+			// skip updating player while shifting
+		}
+
+		// handle shift end: when shifting finishes this frame
+		if (!nowShifting && wasShifting && shiftCaptureDone) {
+			// shift finished: set player to the captured position on the new current side
+			int newCurrent = tileManager.getCurrentSideIndex();
+			// compute final absolute panel X using the (final) current side draw offset
+			int finalOffset = tileManager.getSideDrawOffsetX(newCurrent);
+			player.setWorldPosition(frozenLocalNextX + finalOffset, frozenY);
+			// clear capture
+			shiftCaptureDone = false;
+			frozenCurrentSide = -1;
+			frozenNextSide = -1;
+		}
+
+		wasShifting = tileManager.isShifting();
 	}
 	
 	private void updatePlayer(long elapsedMS) {
@@ -155,8 +191,6 @@ public class GamePanel extends JPanel {
 		player.update(elapsedMS);
 	}
 	
-	// drawShiftingAnimation removed; TileManager handles shifting draw logic internally.
-	
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g); // fixed to singular method
 		Graphics2D g2 = (Graphics2D)g;
@@ -164,11 +198,21 @@ public class GamePanel extends JPanel {
 		g2.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 		
 		// TILES
-		// TileManager now handles both normal and shifting draws internally.
 		tileManager.draw(g2);
-		
+
 		// Entities
-		player.draw(g2);
+		if (tileManager.isShifting() && shiftCaptureDone) {
+			// draw player at both current and next side positions using captured local pixels
+			int currOffsetNow = tileManager.getSideDrawOffsetX(frozenCurrentSide);
+			int nextOffsetNow = tileManager.getSideDrawOffsetX(frozenNextSide);
+			float drawXCurrent = frozenLocalCurrentX + currOffsetNow;
+			float drawXNext = frozenLocalNextX + nextOffsetNow;
+			// draw next first, then current on top
+			player.drawAt(g2, drawXNext, frozenY);
+			player.drawAt(g2, drawXCurrent, frozenY);
+		} else {
+			player.draw(g2);
+		}
 		
 		// UI
 		
@@ -214,20 +258,6 @@ public class GamePanel extends JPanel {
 	
 	public boolean inDebugMode() {
 		return debug;
-	}
-	
-	private void shiftPlayer() {
-		int currentSide = tileManager.getCurrentSideIndex();
-		switch(currentSide) {
-		case 0:
-			break;
-		case 1:
-			break;
-		case 2:
-			break;
-		case 3:
-			break;
-		}
 	}
 	
 	public Asset[] getAssets() {

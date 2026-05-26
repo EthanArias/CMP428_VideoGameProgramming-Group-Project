@@ -208,20 +208,26 @@ public class TileManager {
         int currPixelW = currTileW * GamePanel.TILE_SIZE;
         int nextPixelW = nextTileW * GamePanel.TILE_SIZE;
 
-        int currCenterOffset = (currPixelW < GamePanel.SCREEN_WIDTH) ? (GamePanel.SCREEN_WIDTH - currPixelW) / 2 : 0;
-        int nextCenterOffset = (nextPixelW < GamePanel.SCREEN_WIDTH) ? (GamePanel.SCREEN_WIDTH - nextPixelW) / 2 : 0;
+        int currCenterOffset = (currPixelW < GamePanel.SCREEN_WIDTH) ? 
+        		(GamePanel.SCREEN_WIDTH - currPixelW) / 2 : 0;
+        int nextCenterOffset = (nextPixelW < GamePanel.SCREEN_WIDTH) ? 
+        		(GamePanel.SCREEN_WIDTH - nextPixelW) / 2 : 0;
 
-        // initial positions when shift begins (next is placed directly left of current or right for left shift)
+        // initial positions when shift begins (next is placed directly left of current or 
+        // right for left shift)
         // we'll treat shiftDistance sign to indicate direction (positive -> move right)
         float currStartX = currCenterOffset;
         float nextStartX;
-        // determine whether we're shifting to the right (bringing next from left to center) or to the left
+        // determine whether we're shifting to the right 
+        // (bringing next from left to center) or to the left
         boolean bringingFromLeft = (shiftDistance > 0);
         if (bringingFromLeft) {
-            nextStartX = currStartX - nextPixelW; // place next immediately to the left of current
+            // place next so its rightmost column aligns with current's leftmost column + 1 tile
+            nextStartX = currStartX - nextPixelW + GamePanel.TILE_SIZE;
         } else {
-            // bringing from right
-            nextStartX = currStartX + currPixelW; // place next immediately to the right of current
+            // bringing from right: place next so its leftmost column aligns 
+        	// with current's rightmost column - 1 tile
+            nextStartX = currStartX + currPixelW - GamePanel.TILE_SIZE;
         }
 
         // current and next positions during the animation
@@ -253,7 +259,8 @@ public class TileManager {
         Side current = map.getSide(currentSide);
         if (current == null) return 0;
         int currPixelW = current.getDimensions().width * GamePanel.TILE_SIZE;
-        int currCenterOffset = (currPixelW < GamePanel.SCREEN_WIDTH) ? (GamePanel.SCREEN_WIDTH - currPixelW) / 2 : 0;
+        int currCenterOffset = (currPixelW < GamePanel.SCREEN_WIDTH) ? 
+        		(GamePanel.SCREEN_WIDTH - currPixelW) / 2 : 0;
         float currStartX = currCenterOffset;
         return Math.round(currStartX + shiftProgress);
     }
@@ -268,22 +275,26 @@ public class TileManager {
             Side side = map.getSide(sideIndex);
             if (side == null) return 0;
             int pixelW = side.getDimensions().width * GamePanel.TILE_SIZE;
-            return (pixelW < GamePanel.SCREEN_WIDTH) ? (GamePanel.SCREEN_WIDTH - pixelW) / 2 : 0;
+            return (pixelW < GamePanel.SCREEN_WIDTH) ? 
+            		(GamePanel.SCREEN_WIDTH - pixelW) / 2 : 0;
         }
         // if shifting, compute for current or next side
         Side current = map.getSide(currentSide);
         Side next = map.getSide(nextSideIndex);
         if (sideIndex == currentSide && current != null) {
             int currPixelW = current.getDimensions().width * GamePanel.TILE_SIZE;
-            int currCenterOffset = (currPixelW < GamePanel.SCREEN_WIDTH) ? (GamePanel.SCREEN_WIDTH - currPixelW) / 2 : 0;
+            int currCenterOffset = (currPixelW < GamePanel.SCREEN_WIDTH) ? 
+            		(GamePanel.SCREEN_WIDTH - currPixelW) / 2 : 0;
             float currStartX = currCenterOffset;
             return Math.round(currStartX + shiftProgress);
         }
         if (sideIndex == nextSideIndex && next != null) {
             int currPixelW = current.getDimensions().width * GamePanel.TILE_SIZE;
             int nextPixelW = next.getDimensions().width * GamePanel.TILE_SIZE;
-            int currCenterOffset = (currPixelW < GamePanel.SCREEN_WIDTH) ? (GamePanel.SCREEN_WIDTH - currPixelW) / 2 : 0;
-            float nextStartX = (shiftDistance > 0) ? (currCenterOffset - nextPixelW) : (currCenterOffset + currPixelW);
+            int currCenterOffset = (currPixelW < GamePanel.SCREEN_WIDTH) ? 
+            		(GamePanel.SCREEN_WIDTH - currPixelW) / 2 : 0;
+            float nextStartX = (shiftDistance > 0) ? 
+            		(currCenterOffset - nextPixelW) : (currCenterOffset + currPixelW);
             return Math.round(nextStartX + shiftProgress);
         }
         // otherwise return centered offset
@@ -303,7 +314,8 @@ public class TileManager {
      */
     public void shiftRight() {
         if (isShifting) return;
-        int candidate = (this.currentSide == this.MAX_SIDE) ? this.MIN_SIDE : this.currentSide + 1;
+        int candidate = (this.currentSide == this.MAX_SIDE) ? 
+        		this.MIN_SIDE : this.currentSide + 1;
         startShiftTo(candidate, true);
     }
 
@@ -312,7 +324,8 @@ public class TileManager {
      */
     public void shiftLeft() {
         if (isShifting) return;
-        int candidate = (this.currentSide == this.MIN_SIDE) ? this.MAX_SIDE : this.currentSide - 1;
+        int candidate = (this.currentSide == this.MIN_SIDE) ? 
+        		this.MAX_SIDE : this.currentSide - 1;
         startShiftTo(candidate, false);
     }
 
@@ -332,11 +345,14 @@ public class TileManager {
         int currPixelW = current.getDimensions().width * GamePanel.TILE_SIZE;
         int nextPixelW = next.getDimensions().width * GamePanel.TILE_SIZE;
 
-        int currCenterOffset = (currPixelW < GamePanel.SCREEN_WIDTH) ? (GamePanel.SCREEN_WIDTH - currPixelW) / 2 : 0;
-        int nextCenterOffset = (nextPixelW < GamePanel.SCREEN_WIDTH) ? (GamePanel.SCREEN_WIDTH - nextPixelW) / 2 : 0;
+        int currCenterOffset = (currPixelW < GamePanel.SCREEN_WIDTH) ? 
+        		(GamePanel.SCREEN_WIDTH - currPixelW) / 2 : 0;
+        int nextCenterOffset = (nextPixelW < GamePanel.SCREEN_WIDTH) ? 
+        		(GamePanel.SCREEN_WIDTH - nextPixelW) / 2 : 0;
 
         // compute starting next X relative to centering
-        float nextStartX = bringFromLeft ? (currCenterOffset - nextPixelW) : (currCenterOffset + currPixelW);
+        float nextStartX = bringFromLeft ? (currCenterOffset - nextPixelW) : 
+        	(currCenterOffset + currPixelW);
         // goal is nextCenterOffset
         this.shiftDistance = nextCenterOffset - nextStartX;
         // store direction sign so update() moves progress the right way
@@ -345,6 +361,25 @@ public class TileManager {
 
     public Side getCurrentSide() {
         return map.getSide(currentSide);
+    }
+
+    // Expose shifting state to other systems (e.g., GamePanel) 
+    // so they can freeze entities while shifting.
+    public boolean isShifting() {
+        return isShifting;
+    }
+
+    public int getNextSideIndex() {
+        return nextSideIndex;
+    }
+
+    /**
+     * Return the tile width (in tiles) of the given side index, or 0 if missing.
+     */
+    public int getSideTileWidth(int sideIndex) {
+        Side side = map.getSide(sideIndex);
+        if (side == null) return 0;
+        return side.getDimensions().width;
     }
 
     /**
