@@ -169,6 +169,7 @@ public class Player extends Entity {
 					break;
 				case "LockedDoor":
 					if(hasKey) {
+						gamePanel.playSFX(1);
 						gamePanel.setGameState(GameState.END_SCREEN);
 						assets[index] = null;
 					}

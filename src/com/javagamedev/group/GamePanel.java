@@ -93,9 +93,9 @@ public class GamePanel extends JPanel {
 		gameState = GameState.START_SCREEN;
 		
 		soundManager = new SoundManager(PLAYBACK_FORMAT);
-		//sounds[0] = soundManager.getSound("res/sounds/bgm.wav");
-		//sounds[1] = soundManager.getSound("res/sounds/sfx1.wav");
-		//soundManager.play(sounds[0], null, true);
+		sounds[0] = soundManager.getSound("res/sounds/bgm.wav");
+		sounds[1] = soundManager.getSound("res/sounds/openDoor.wav");
+		soundManager.play(sounds[0], null, true);
 		
 		this.player.setWorldPosition(
 				player.getWorldPosition().x+TILE_SIZE*1, 
