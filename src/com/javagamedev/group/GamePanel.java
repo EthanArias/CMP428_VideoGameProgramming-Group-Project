@@ -307,9 +307,25 @@ public class GamePanel extends JPanel {
 	}
 	
 	private void drawAssets(Graphics2D g2) {
-		for(Asset asset : assets) {
-			if(asset != null) {
-				asset.draw(g2, tileManager.getCurrentSideIndex());
+		if (assets == null) return;
+		int currentSideIndex = tileManager.getCurrentSideIndex();
+		boolean shifting = tileManager.isShifting();
+		int nextSideIndex = shifting ? tileManager.getNextSideIndex() : -1;
+		for (int i = 0; i < assets.length; i++) {
+			Asset asset = assets[i];
+			if (asset == null) continue;
+			int assetSide = asset.getSide();
+			// Only draw assets for the currently visible side(s)
+			if (assetSide != currentSideIndex && !(shifting && assetSide == nextSideIndex)) continue;
+			// animated offset for the side the asset belongs to (handles shifts)
+			int offset = tileManager.getSideDrawOffsetX(assetSide);
+			if (offset != 0) {
+				g2.translate(offset, 0);
+			}
+			// pass the asset's side so Asset.draw's side check succeeds
+			asset.draw(g2, assetSide);
+			if (offset != 0) {
+				g2.translate(-offset, 0);
 			}
 		}
 	}
