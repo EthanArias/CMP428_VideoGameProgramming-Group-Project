@@ -40,7 +40,7 @@ public class TileManager {
     public TileManager(GamePanel gamePanel) {
         this.gamePanel = gamePanel;
         
-        set = new TileSet("res/images/tilesets/spritesheet_test.png", 16, 48);
+        set = new TileSet("res/images/tiles/spritesheet_test.png", 16, 48);
         this.map = new Map();
         this.map.setSide(readMapJSON("res/maps/map_side0.json"), 0);
         this.map.setSide(readMapJSON("res/maps/map_side1.json"), 1);

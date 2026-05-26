@@ -24,6 +24,10 @@ public class GamePanel extends JPanel {
 	private static final long serialVersionUID = 1L;
 	private boolean debug = false;
 	
+	// GAME STATE
+	public enum GameState { START_SCREEN, PLAYING, END_SCREEN};
+	private GameState gameState;
+	
 	// SCREEN SETTINGS
 	private final static int originalTileSize = 16; // 16x16 tile
 	private final static int scale = 3;
@@ -71,7 +75,8 @@ public class GamePanel extends JPanel {
     private boolean wasShifting = false;
 	
 	// FOREGROUND / UI
-	
+	private GraphicalUserInterface gui = new GraphicalUserInterface(this);
+    
 	// INPUT
 	private GameAction jump;
 	private GameAction left;
@@ -79,11 +84,13 @@ public class GamePanel extends JPanel {
 	private GameAction shift;
 	private GameAction debugAction;
 	private GameAction escapeAction;
+	private GameAction enterAction;
 	public final  InputManager inputManager = new InputManager(this);
 	
 	public GamePanel() {
 		initJSettings();
 		createInput();
+		gameState = GameState.START_SCREEN;
 		
 		soundManager = new SoundManager(PLAYBACK_FORMAT);
 		//sounds[0] = soundManager.getSound("res/sounds/bgm.wav");
@@ -93,6 +100,8 @@ public class GamePanel extends JPanel {
 		this.player.setWorldPosition(
 				player.getWorldPosition().x+TILE_SIZE*1, 
 				SCREEN_HEIGHT-player.getImage().getHeight(null)-TILE_SIZE*1);
+		
+		assetSetter.setObject(assets);
 	}
 	
 	private void initJSettings() {
@@ -111,10 +120,31 @@ public class GamePanel extends JPanel {
 		if(escapeAction.isPressed()) {
 			System.exit(0);
 		}
+		
+		switch(gameState) {
+			case START_SCREEN:
+				updateOnStart(elapsedMS);
+				break;
+			case PLAYING:
+				updateOnPlaying(elapsedMS);
+				break;
+			case END_SCREEN:
+				updateOnEnd(elapsedMS);
+				break;
+		}
+		
+	}
+
+	private void updateOnStart(double elapsedMS) {
+		if(enterAction.isPressed()) {
+			gameState = GameState.PLAYING;
+		}
+	}
+	
+	private void updateOnPlaying(double elapsedMS) {
 		if(shift.isPressed()) {
 			tileManager.shiftRight();
 		}
-
 		// advance tile manager animations (e.g., side shifting)
 		tileManager.update((long)elapsedMS);
 
@@ -171,7 +201,11 @@ public class GamePanel extends JPanel {
 
 		wasShifting = tileManager.isShifting();
 	}
-
+	
+	private void updateOnEnd(double elapsedMS) {
+		
+	}
+	
 	/**
 	 * Hook called when a side shift finishes to determine the player's new world position
 	 * on the destination side. Default implementation preserves the prior behavior
@@ -248,6 +282,16 @@ public class GamePanel extends JPanel {
 		tileManager.draw(g2);
 
 		// Entities
+		drawAssets(g2);
+		drawEntities(g2);
+		
+		// UI
+		gui.draw(g2);
+		
+		g2.dispose();
+	}
+	
+	private void drawEntities(Graphics2D g2) {
 		if (tileManager.isShifting() && shiftCaptureDone) {
 			// draw player at both current and next side positions using captured local pixels
 			int currOffsetNow = tileManager.getSideDrawOffsetX(frozenCurrentSide);
@@ -260,10 +304,30 @@ public class GamePanel extends JPanel {
 		} else {
 			player.draw(g2);
 		}
-		
-		// UI
-		
-		g2.dispose();
+	}
+	
+	private void drawAssets(Graphics2D g2) {
+		if (assets == null) return;
+		int currentSideIndex = tileManager.getCurrentSideIndex();
+		boolean shifting = tileManager.isShifting();
+		int nextSideIndex = shifting ? tileManager.getNextSideIndex() : -1;
+		for (int i = 0; i < assets.length; i++) {
+			Asset asset = assets[i];
+			if (asset == null) continue;
+			int assetSide = asset.getSide();
+			// Only draw assets for the currently visible side(s)
+			if (assetSide != currentSideIndex && !(shifting && assetSide == nextSideIndex)) continue;
+			// animated offset for the side the asset belongs to (handles shifts)
+			int offset = tileManager.getSideDrawOffsetX(assetSide);
+			if (offset != 0) {
+				g2.translate(offset, 0);
+			}
+			// pass the asset's side so Asset.draw's side check succeeds
+			asset.draw(g2, assetSide);
+			if (offset != 0) {
+				g2.translate(-offset, 0);
+			}
+		}
 	}
 	
 	public Point pixelsToTiles(Point.Float pixels) {
@@ -280,6 +344,7 @@ public class GamePanel extends JPanel {
 		this.shift = new GameAction("shift", GameAction.DETECT_INITAL_PRESS_ONLY);
 		this.debugAction = new GameAction("debug", GameAction.DETECT_INITAL_PRESS_ONLY);
 		this.escapeAction = new GameAction("exit", GameAction.DETECT_INITAL_PRESS_ONLY);
+		this.enterAction = new GameAction("enter", GameAction.DETECT_INITAL_PRESS_ONLY);
 		
 		inputManager.mapToKey(jump, KeyEvent.VK_SPACE);
 		inputManager.mapToKey(left, KeyEvent.VK_A);
@@ -293,6 +358,7 @@ public class GamePanel extends JPanel {
 		
 		inputManager.mapToKey(debugAction, KeyEvent.VK_Q);
 		inputManager.mapToKey(escapeAction, KeyEvent.VK_ESCAPE);
+		inputManager.mapToKey(enterAction, KeyEvent.VK_ENTER);
 	}
 	
 	public TileManager getTileManager() {
@@ -318,6 +384,14 @@ public class GamePanel extends JPanel {
 		else {
 			soundManager.play(sounds[index], null, false);
 		}
+	}
+	
+	public GameState getCurrentGameState() {
+		return gameState;
+	}
+	
+	public void setGameState(GameState gameState) {
+		this.gameState = gameState;
 	}
 	
 }
