@@ -106,17 +106,14 @@ public class GamePanel extends JPanel {
 		if(escapeAction.isPressed()) {
 			System.exit(0);
 		}
+		if(shift.isPressed()) {
+			tileManager.shiftRight();
+		}
 		
-		if(!shifting.isActive()) {
-			if(shift.isPressed()) {
-				shifting.activate();
-				shiftPlayer();
-			}
-			updatePlayer((long)elapsedMS);
-		}
-		else if(shifting.isActive()) {
-			updateShiftAnimation((long)elapsedMS);
-		}
+		// advance tile manager animations (e.g., side shifting)
+		tileManager.update((long)elapsedMS);
+		
+		updatePlayer((long)elapsedMS);
 	}
 	
 	private void updateShiftAnimation(long elapsedMS) {
@@ -158,20 +155,7 @@ public class GamePanel extends JPanel {
 		player.update(elapsedMS);
 	}
 	
-	private void drawShiftingAnimation(Graphics2D g2) {
-	    float p = shifting.getProgress(); // 0..1
-	    int shiftPx = (int) (p * GamePanel.SCREEN_WIDTH);
-
-	    int currentIndex = tileManager.getCurrentSideIndex();
-	    int nextIndex = (currentIndex == tileManager.MAX_SIDE) ? 
-	    		tileManager.MIN_SIDE : currentIndex + 1;
-
-	    // current side slides right
-	    tileManager.drawSideAt(g2, currentIndex, +shiftPx);
-
-	    // next side starts off-screen left at -SCREEN_WIDTH and moves right to 0
-	    tileManager.drawSideAt(g2, nextIndex, -GamePanel.SCREEN_WIDTH + shiftPx);
-	}
+	// drawShiftingAnimation removed; TileManager handles shifting draw logic internally.
 	
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g); // fixed to singular method
@@ -180,12 +164,8 @@ public class GamePanel extends JPanel {
 		g2.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 		
 		// TILES
-		if (shifting.isActive() && !shifting.isDone()) {
-			drawShiftingAnimation(g2);
-		}
-		else {
-			tileManager.draw(g2);
-		}
+		// TileManager now handles both normal and shifting draws internally.
+		tileManager.draw(g2);
 		
 		// Entities
 		player.draw(g2);
