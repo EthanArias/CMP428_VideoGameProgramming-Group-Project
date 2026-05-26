@@ -48,4 +48,10 @@ public class SceneAnimation {
 		return this.elapsedDuration;
 	}
 	
+	public void reset() {
+		this.active = false;
+		this.elapsedDuration = 0;
+		this.progress = 0f;
+	}
+	
 }
