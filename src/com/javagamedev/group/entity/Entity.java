@@ -14,6 +14,8 @@ public abstract class Entity {
 
 	protected GamePanel gamePanel;
 	
+	public Point.Float position3D = new Point.Float(0,0);
+	
 	public Point.Float worldPosition = new Point.Float(0, 0);
 	protected Point.Float velocity = new Point.Float(0, 0);
 	protected float speed;

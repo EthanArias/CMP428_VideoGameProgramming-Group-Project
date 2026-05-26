@@ -158,7 +158,14 @@ public class GamePanel extends JPanel {
 			int newCurrent = tileManager.getCurrentSideIndex();
 			// compute final absolute panel X using the (final) current side draw offset
 			int finalOffset = tileManager.getSideDrawOffsetX(newCurrent);
-			player.setWorldPosition(frozenLocalNextX + finalOffset, frozenY);
+			// Allow customizable resolution of player position after a shift
+			java.awt.Point.Float newPos = resolvePlayerPositionAfterShift(
+					frozenCurrentSide, // from side
+					newCurrent,         // to side
+					frozenLocalCurrentX,
+					frozenLocalNextX,
+					frozenY);
+			player.setWorldPosition(newPos.x, newPos.y);
 			// clear capture
 			shiftCaptureDone = false;
 			frozenCurrentSide = -1;
@@ -166,6 +173,44 @@ public class GamePanel extends JPanel {
 		}
 
 		wasShifting = tileManager.isShifting();
+	}
+
+	/**
+	 * Hook called when a side shift finishes to determine the player's new world position
+	 * on the destination side. Default implementation preserves the prior behavior
+	 * (maps the captured local X on the next side into panel coordinates using the
+	 * destination side's draw offset and preserves Y). Override or edit this method
+	 * to implement custom mapping logic (percentage-based, ground snap, etc.).
+	 *
+	 * @param fromSide index of the side we shifted from
+	 * @param toSide index of the side we shifted to (now current)
+	 * @param frozenLocalCurrentX the captured local X (pixels) within the original side
+	 * @param frozenLocalNextX the computed local X (pixels) on the destination side
+	 * @param frozenY the captured Y (pixels)
+	 * @return new world position (panel pixel coordinates) for the player
+	 */
+	public Point.Float resolvePlayerPositionAfterShift(int fromSide, int toSide,
+							float frozenLocalCurrentX, float frozenLocalNextX, float frozenY) {
+		// Default: use frozenLocalNextX plus the destination side's draw offset
+		int destOffset = tileManager.getSideDrawOffsetX(toSide);
+		float newWorldX = 0f;
+		
+		if(fromSide==0) {
+			newWorldX = GamePanel.TILE_SIZE + destOffset;
+		}
+		else if(fromSide==1) {
+			newWorldX = player.position3D.x;
+		}
+		else if(fromSide==2) {
+			// should be horizontaly fliped
+			newWorldX = player.position3D.x;
+		}
+		else if(fromSide==3) {
+			// should be on the right
+			newWorldX = player.position3D.y;
+		}
+		
+		return new Point.Float(newWorldX, frozenY);
 	}
 	
 	private void updatePlayer(long elapsedMS) {
@@ -189,6 +234,13 @@ public class GamePanel extends JPanel {
 		// apply gravity into vertical velocity and move
 		player.move(dx, dy);
 		player.update(elapsedMS);
+		
+		if(tileManager.getCurrentSideIndex()==0 || tileManager.getCurrentSideIndex()==3) {
+			player.position3D.x = player.getWorldPosition().x;
+		}
+		else if(tileManager.getCurrentSideIndex()==1 || tileManager.getCurrentSideIndex()==2) {
+			player.position3D.y = player.getWorldPosition().y;
+		}
 	}
 	
 	public void paintComponent(Graphics g) {
