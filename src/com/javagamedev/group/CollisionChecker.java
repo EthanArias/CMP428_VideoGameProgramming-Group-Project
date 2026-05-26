@@ -3,7 +3,9 @@ package com.javagamedev.group;
 import java.awt.Point;
 import java.awt.Rectangle;
 
+import com.javagamedev.group.assets.Asset;
 import com.javagamedev.group.entity.Entity;
+import com.javagamedev.group.entity.Player;
 import com.javagamedev.group.tiles.Side;
 
 public class CollisionChecker {
@@ -60,6 +62,71 @@ public class CollisionChecker {
 				entity.collideVertical();
 			}
         }
+    }
+    
+    public int checkAsset(Entity entity) {
+    	int index = -1;
+    	
+    	Asset[] assets = this.gamePanel.getAssets();
+    	for(int i=0; i<assets.length; i++) {
+    		if(assets[i] != null) {
+    			// get entity's solid area rect
+				Rectangle entityBox = new Rectangle(
+					    (int)Math.floor(entity.getWorldPosition().x + entity.getVelocity().x)
+					    	+ entity.getHitBox().x,
+					    (int)Math.floor(entity.getWorldPosition().y + entity.getVelocity().y)
+					    	+ entity.getHitBox().y,
+					    entity.getHitBox().width,
+					    entity.getHitBox().height);
+				
+				// Get the object's hitbox
+				Rectangle assetBox = new Rectangle(
+						assets[i].getPosition().x + assets[i].getBounds().x, 
+						assets[i].getPosition().y + assets[i].getBounds().y, 
+						assets[i].getBounds().width, 
+						assets[i].getBounds().height);
+				
+				if(entityBox.intersects(assetBox)) {
+					if(assets[i].hasCollision()) {
+						Side tileMap = this.gamePanel.getTileManager().getCurrentSide();
+						// moving right
+				        if(entity.getVelocity().x > 0) {
+				        	if(tileMap.isAnyCollideableAt(assets[i].getBounds().x+1, 
+				        			assets[i].getBounds().y)) {
+								entity.collideHorizontal();
+							}
+				        }
+				        // moving left
+				        else if(entity.getVelocity().x < 0) {
+				        	if(tileMap.isAnyCollideableAt(assets[i].getBounds().x, 
+				        			assets[i].getBounds().y)) {
+								entity.collideHorizontal();
+							}
+				        }
+				        
+				        // jumping
+				        if(entity.getVelocity().y < 0) {
+				        	if(tileMap.isAnyCollideableAt(assets[i].getBounds().x, 
+				        			assets[i].getBounds().y-1)) {
+								entity.collideVertical();
+							}
+				        }
+				        // falling
+				        else if(entity.getVelocity().y > 0) {
+				        	if(tileMap.isAnyCollideableAt(assets[i].getBounds().x, 
+				        			assets[i].getBounds().y+1)) {
+								entity.collideVertical();
+							}
+				        }
+					}
+					if(entity instanceof Player) {
+			    		index = i;
+			    	}
+				}
+    		}
+    	}
+    	
+    	return index;
     }
     
 }

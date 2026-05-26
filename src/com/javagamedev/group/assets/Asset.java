@@ -1,7 +1,9 @@
 package com.javagamedev.group.assets;
 
+import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 
 public abstract class Asset {
@@ -66,6 +68,10 @@ public abstract class Asset {
 	
 	public void setPosition(int x, int y) {
 		this.position = new Point(x,y);
+	}
+	
+	public Rectangle getBounds() {
+		return new Rectangle(position.x, position.y, image.getWidth(), image.getHeight());
 	}
 	
 	public void draw(Graphics2D g, int mapSide) {
