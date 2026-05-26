@@ -1,11 +1,13 @@
 package com.javagamedev.group.entity;
 
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 
 import com.javagamedev.graphics.Animation;
 import com.javagamedev.group.GamePanel;
+import com.javagamedev.group.assets.Asset;
 
 public class Player extends Entity {
 	
@@ -153,6 +155,18 @@ public class Player extends Entity {
 		
 	}
 	
+	public void interactWithAssest(int index) {
+		if(index != -1) { // match foud
+			Asset[] assets = this.gamePanel.getAssets();
+			
+			String assetName = assets[index].getName();
+			switch(assetName) {
+				case "": 
+					break;
+			}
+		}
+	}
+	
 	@Override
 	public void draw(Graphics2D g) {
 		// because sprite sheets only draw right, we must manualy reverse for left
@@ -206,6 +220,10 @@ public class Player extends Entity {
 		
 		// Check tile collision
 		this.gamePanel.collisionChecker.checkTile(this);
+		
+		// Check asset collision
+		int assetIndex = this.gamePanel.collisionChecker.checkAsset(this);
+		interactWithAssest(assetIndex);
 		
 		worldPosition.x += velocity.x * elapsedMs;
 		worldPosition.y += velocity.y * elapsedMs;
