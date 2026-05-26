@@ -100,6 +100,8 @@ public class GamePanel extends JPanel {
 		this.player.setWorldPosition(
 				player.getWorldPosition().x+TILE_SIZE*1, 
 				SCREEN_HEIGHT-player.getImage().getHeight(null)-TILE_SIZE*1);
+		
+		assetSetter.setObject(assets);
 	}
 	
 	private void initJSettings() {
@@ -281,6 +283,7 @@ public class GamePanel extends JPanel {
 
 		// Entities
 		drawEntities(g2);
+		drawAssets(g2);
 		
 		// UI
 		gui.draw(g2);
@@ -300,6 +303,14 @@ public class GamePanel extends JPanel {
 			player.drawAt(g2, drawXCurrent, frozenY);
 		} else {
 			player.draw(g2);
+		}
+	}
+	
+	private void drawAssets(Graphics2D g2) {
+		for(Asset asset : assets) {
+			if(asset != null) {
+				asset.draw(g2, tileManager.getCurrentSideIndex());
+			}
 		}
 	}
 	

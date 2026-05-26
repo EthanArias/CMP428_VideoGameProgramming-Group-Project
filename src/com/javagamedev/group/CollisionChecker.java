@@ -86,6 +86,7 @@ public class CollisionChecker {
 						assets[i].getBounds().width, 
 						assets[i].getBounds().height);
 				
+				System.out.println(entityBox.x + " " + assetBox.x);
 				if(entityBox.intersects(assetBox)) {
 					if(assets[i].hasCollision()) {
 						Side tileMap = this.gamePanel.getTileManager().getCurrentSide();

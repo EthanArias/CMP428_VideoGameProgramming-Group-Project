@@ -6,9 +6,8 @@ import java.awt.image.BufferedImage;
 public class TestAsset extends Asset {
 
 	public TestAsset() {
-		BufferedImage spriteSheet = com.javagamedev.utility.GeneralUtility.loadImage(
+		BufferedImage img = com.javagamedev.utility.GeneralUtility.loadImage(
 				"res/images/tiles/testAsset.png");
-		BufferedImage img = spriteSheet.getSubimage(0, 112, 16, 16);
 		super(
 				"TestAsset", 
 				(BufferedImage) 

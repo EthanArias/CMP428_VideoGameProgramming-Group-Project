@@ -15,5 +15,9 @@ public class AssetSetter {
 	 */
 	public void setObject(Asset[] assets) {
 		
+		assets[0] = new TestAsset();
+		assets[0].setPosition(GamePanel.TILE_SIZE*3, GamePanel.TILE_SIZE*5);
+		assets[0].setSide(0);
+		
 	}
 }

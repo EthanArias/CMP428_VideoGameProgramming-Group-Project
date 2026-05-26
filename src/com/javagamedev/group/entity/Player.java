@@ -161,7 +161,8 @@ public class Player extends Entity {
 			
 			String assetName = assets[index].getName();
 			switch(assetName) {
-				case "": 
+				case "TestAsset":
+					System.out.println("TEST");
 					break;
 			}
 		}
