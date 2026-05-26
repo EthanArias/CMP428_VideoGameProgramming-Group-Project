@@ -126,7 +126,6 @@ public class GamePanel extends JPanel {
 			frozenNextSide = tileManager.getNextSideIndex();
 			// current side draw offset at capture
 			int currOffset = tileManager.getSideDrawOffsetX(frozenCurrentSide);
-			int nextOffset = tileManager.getSideDrawOffsetX(frozenNextSide);
 			// player's absolute panel position
 			float playerPanelX = player.getWorldPosition().x;
 			// local pixel within current side
@@ -156,8 +155,6 @@ public class GamePanel extends JPanel {
 		if (!nowShifting && wasShifting && shiftCaptureDone) {
 			// shift finished: set player to the captured position on the new current side
 			int newCurrent = tileManager.getCurrentSideIndex();
-			// compute final absolute panel X using the (final) current side draw offset
-			int finalOffset = tileManager.getSideDrawOffsetX(newCurrent);
 			// Allow customizable resolution of player position after a shift
 			java.awt.Point.Float newPos = resolvePlayerPositionAfterShift(
 					frozenCurrentSide, // from side
@@ -193,21 +190,19 @@ public class GamePanel extends JPanel {
 							float frozenLocalCurrentX, float frozenLocalNextX, float frozenY) {
 		// Default: use frozenLocalNextX plus the destination side's draw offset
 		int destOffset = tileManager.getSideDrawOffsetX(toSide);
-		float newWorldX = 0f;
+		float newWorldX = GamePanel.TILE_SIZE + destOffset;
 		
 		if(fromSide==0) {
-			newWorldX = GamePanel.TILE_SIZE + destOffset;
+			// TODO: fill in
 		}
 		else if(fromSide==1) {
-			newWorldX = player.position3D.x;
+			// TODO: fill in
 		}
 		else if(fromSide==2) {
-			// should be horizontaly fliped
-			newWorldX = player.position3D.x;
+			// TODO: fill in
 		}
 		else if(fromSide==3) {
-			// should be on the right
-			newWorldX = player.position3D.y;
+			// TODO: fill in
 		}
 		
 		return new Point.Float(newWorldX, frozenY);
